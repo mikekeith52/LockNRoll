@@ -66,4 +66,5 @@
 3. To score the board and clear any spaces based on combinations of dice you have placed on the board, type 3
 4. If you want to print an empty board, type 4 (this is useful to reference when trying to place a joker)
 5. To exit, type 5  
+
 **Note, there is no way to reverse a move, so be careful**
