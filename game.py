@@ -70,6 +70,8 @@ class Game:
 		self.gameover = False
 
 	def _score_combo(self,combo):
+		""" combo is a list of dice to be scored (ex: ["R1","B2","G3","Y4"])
+		"""
 		def points(score_key):
 			return int(round(score_index[score_key][0]*.75**(len([i for i in combo if i == 'JO']))))
 
@@ -159,23 +161,28 @@ class Game:
 		print(self.jokers)
 
 	def place_die(self,which,where):
-		if which in self.dice:
-			if isinstance(where,int):
-				if self.board[where-1].isnumeric():
-					if where == int(self.board[where-1]):
-						self.board[where-1] = which
-						for i, d in enumerate(self.dice):
-							if d == which:
-								del self.dice[i]
-								break
-					else:
-						raise GameError.BoardPosNotEmpty(f'Space {where} is not available')
-				else: 
+		""" which is a die that must be available in the self.dice list
+		    where is a space on the 1-indexed board (see init_board global) and must be int-like (ex: 1, 1.0, '1', '01', ' 1') between 1 and 16
+		"""
+		if which in self.dice: # is the die in self.dice?
+			where = int(where) # try to cast where to int type
+			if self.board[where-1].isnumeric(): # check if the str element in the board list is a number (ex: not 'R4'), if it is that space is open
+				if where == int(self.board[where-1]): # check if which is between 1 and 16
+					self.board[where-1] = which # place which on the open space on the board
+					for i, d in enumerate(self.dice):
+						if d == which: # delete which from the self.dice list
+							del self.dice[i]
+							break # break after only one die has been deleted
+				else:
 					raise GameError.BoardPosNotEmpty(f'Space {where} is not available')
+			else: 
+				raise GameError.BoardPosNotEmpty(f'Space {where} is not available')
 		else:
 			raise GameError.DieDoesNotExist(f'That die ({which}) not available')
 
 	def place_joker(self,where):
+		""" where is a space on the 1-indexed board (see init_board global) and must be int-like (ex: 1, 1.0, '1', '01', True)
+		"""
 			if self.jokers > 0:
 				self.board[where-1] = 'JO'
 				self.jokers -= 1
@@ -183,9 +190,13 @@ class Game:
 				raise GameError.JokerNotAvailable(f'joker not avaialable, earn {self.next_joker} more non-bonus points for next one')
 
 	def lock_n_roll(self):
-
+		""" LOCK N' ROLL BRAH!!
+		"""
 		def check_for_jokers():
-			""" checks for jokers on the board and opens up combinations that are touching the joker to be evaluated in the next score
+			""" checks for jokers on the board and opens up combinations that are touching the joker to be evaluated in the next score_board() call
+				O(N) --> O(16) in all cases
+				opted for a more complex solution (as opposed to O(1) best-case) to improve readability and because board is small
+				i might revist this
 			"""
 			for i, v in enumerate(self.board):
 				if v == 'JO':
@@ -255,6 +266,8 @@ class Game:
 				self.points += bonus_points
 
 		def get_new_dice():
+			""" if you are out of dice and there are still spaces on the board, this will give you more dice
+			"""
 			if len(self.dice) == 0:
 				number_new_dice = min(4,len([v for v in self.board if v.isnumeric()]))
 				if (number_new_dice == 0) & (self.jokers == 0):
@@ -268,6 +281,8 @@ class Game:
 		get_new_dice()
 
 	def game_over(self):
+		""" exits the game
+		"""
 		print(f'game over! your final score is: {self.points}')
 		self.gameover = True
 		exit()
