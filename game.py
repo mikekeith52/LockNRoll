@@ -1,13 +1,16 @@
 import numpy as np
 
+# to form the dice, the following two lists are drawn from randomly
 colors_pool = ['R','Y','G','B']
 numbers_pool = ['1','2','3','4']
 
+# the board is 1-indexed (no good reason for that)
 init_board = ['01','02','03','04',
               '05','06','07','08',
               '09','10','11','12',
               '13','14','15','16']
 
+# this is command-line graphical representation of the board
 board_graph_rep ="""==================
 ||{}||{}||{}||{}||
 ==================
@@ -18,6 +21,7 @@ board_graph_rep ="""==================
 ||{}||{}||{}||{}||
 =================="""
 
+# these are the indices of the baord that can be scored
 combination_idx = [
 	[0,1,2,3],
 	[4,5,6,7],
@@ -41,6 +45,7 @@ combination_idx = [
 	[10,11,14,15]
 ]
 
+# descriptive errors
 class GameError(Exception):
 	class BoardPosNotEmpty(Exception):
 		pass
@@ -49,6 +54,7 @@ class GameError(Exception):
 	class JokerNotAvailable(Exception):
 		pass
 
+# the game class
 class Game:
 	def __init__(self):
 		self.board = init_board[:]
@@ -101,8 +107,8 @@ class Game:
 		elif ((len(unq_color) == 4) & (len(unq_number) == 4)):
 			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ecen')))
 			return score_index['ecen']
-		# two pair
-		elif ((len(unq_color) == 2) & (len(unq_number) == 2) & (unq_dice == 2)) | ((len(unq_color) == 3) & (len(unq_number) == 3) & (unq_dice == 3) & ('JO' in unq_dice)):
+		# two pair -- not quite working yet
+		elif ((len(unq_color) == 2) & (len(unq_number) == 2) & (len(unq_dice) == 2)) | ((len(unq_color) == 3) & (len(unq_number) == 3) & (len(unq_dice) == 3) & ('JO' in unq_dice)):
 			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('tp')))
 			return score_index['tp']
 		# same color only
@@ -114,7 +120,7 @@ class Game:
 			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('sn')))
 			return score_index['sn']
 		# pair color pair number
-		elif ((len(unq_color) == 2) & (len(unq_number) == 2)) | ((len(unq_color) == 3) & (len(unq_number) == 3) & ('JO' in unq_dice)):
+		elif ((len(unq_color) == 2) & (len(unq_number) == 2) & (len(unq_dice) == 4)) | ((len(unq_color) == 3) & (len(unq_number) == 3) & (len(unq_dice) == 4) & ('JO' in unq_dice)):
 			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pcpn')))
 			return score_index['pcpn']
 		# each color only
@@ -125,12 +131,12 @@ class Game:
 		elif (len(unq_number) == 4):
 			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('en')))
 			return score_index['en']
-		# pair color
-		elif (len(unq_color) == 2) | ((len(unq_color) == 3) & ('JO' in unq_dice)):
+		# pair color -- this isn't quite working yet
+		elif ((len(unq_color) == 2) & (len(unq_dice) >= 3)) | ((len(unq_color) == 3) & ('JO' in unq_dice)):
 			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pc')))
 			return score_index['pc']
-		# pair number
-		elif (len(unq_number) == 2) | ((len(unq_number) == 3) & ('JO' in unq_dice)):
+		# pair number -- this isn't quite working yet
+		elif ((len(unq_number) == 2) & (len(unq_dice) >= 3)) | ((len(unq_number) == 3) & ('JO' in unq_dice)):
 			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pn')))
 			return score_index['pn']
 		# everything else
@@ -176,67 +182,92 @@ class Game:
 			else:
 				raise GameError.JokerNotAvailable(f'joker not avaialable, earn {self.next_joker} more non-bonus points for next one')
 
-	def score_board(self):
-		bonus_points = 0
-		delete_idx = [] # keeps track of indices that will need to not be evaluated again because they were already scored
-		add_idx = [] # keeps track of indices that will need to be added back to self.index_not_scored based on spaces on the board that open back up
-		clear_spaces = [] # keeps track of all the spaces that need to be cleared after this turn
-		for idx,combo in enumerate(self.index_not_scored): # combo ex: [0,1,2,3]
-			board_combo = [self.board[v] for v in combo if not self.board[v].isnumeric()] # ex: ['R1','R2','R3','R4']
-			if len(board_combo) == 4:
-				points_clear = self._score_combo(board_combo)
-				points = int(round(points_clear[0]*.75**len([i for i in board_combo if i == 'JO'])))
-				clear = points_clear[1]
-				self.points += points
-				if clear:
-					for i in combo:
-						clear_spaces.append(i)
-						for ci in combination_idx:
-							if i in ci:
-								add_idx.append(ci) # brings back any squares that have been unlocked with the clear
-				else:
-					delete_idx.append(combo) # to avoid double scoring
-				self.next_joker -= points
-				while self.next_joker <= 0:
-					if self.jokers == 2:
-						bonus_points += self.next_joker_bonus
-						self.next_joker_bonus = min(self.next_joker_bonus*2,64000)
+	def lock_n_roll(self):
+
+		def check_for_jokers():
+			""" checks for jokers on the board and opens up combinations that are touching the joker to be evaluated in the next score
+			"""
+			for i, v in enumerate(self.board):
+				if v == 'JO':
+					for ci in combination_idx:
+						if (i in ci) & (ci not in self.index_not_scored):
+							self.index_not_scored.append(ci)
+
+		def score_board():
+			""" scores board by checking scorable combinations (namespace combo) and the patterns on those combinations
+				deletes any combinations that get scored to avoid being able to score again
+				brings back combinations that touch spaces that have been cleared by a clear combination
+				awards jokers/joker bonuses
+				awards clearing bonuses
+				checks if out of dice, and if so, gets the player more dice
+				if out of dice, spcaes, and jokers, game over
+			"""
+			bonus_points = 0
+			delete_idx = [] # keeps track of indices that will need to not be evaluated again because they were already scored
+			add_idx = [] # keeps track of indices that will need to be added back to self.index_not_scored based on spaces on the board that open back up
+			clear_spaces = [] # keeps track of all the spaces that need to be cleared after this turn
+			# once indices have been cleared, adding a joker does not bring them back
+			for idx,combo in enumerate(self.index_not_scored): # combo ex: [0,1,2,3]
+				board_combo = [self.board[v] for v in combo if not self.board[v].isnumeric()] # ex: ['R1','R2','R3','R4']
+				if len(board_combo) == 4:
+					points_clear = self._score_combo(board_combo)
+					points = int(round(points_clear[0]*.75**len([i for i in board_combo if i == 'JO'])))
+					clear = points_clear[1]
+					self.points += points
+					if clear:
+						for i in combo:
+							clear_spaces.append(i)
+							for ci in combination_idx:
+								if i in ci:
+									add_idx.append(ci) # brings back any squares that have been unlocked with the clear
 					else:
-						self.jokers+=1
-					
-					self.next_joker_points = min(1500,self.next_joker_points+250)
-					self.next_joker = self.next_joker + self.next_joker_points
+						delete_idx.append(combo) # to avoid double scoring
+					self.next_joker -= points
+					while self.next_joker <= 0:
+						if self.jokers == 2:
+							bonus_points += self.next_joker_bonus
+							self.next_joker_bonus = min(self.next_joker_bonus*2,64000)
+						else:
+							self.jokers+=1
+						
+						self.next_joker_points = min(1500,self.next_joker_points+250)
+						self.next_joker = self.next_joker + self.next_joker_points
 
-		# deletes combo possibilities that have already been scored
-		self.index_not_scored = [idx for idx in self.index_not_scored if idx not in delete_idx]
+			# deletes combo possibilities that have already been scored
+			self.index_not_scored = [idx for idx in self.index_not_scored if idx not in delete_idx]
 
-		# adds back combos that are possible to score again after board clears
-		for idx in add_idx:
-			if idx not in self.index_not_scored:
-				self.index_not_scored.append(idx) 
+			# adds back combos that are possible to score again after board clears
+			for idx in add_idx:
+				if idx not in self.index_not_scored:
+					self.index_not_scored.append(idx) 
 
-		# clears spaces
-		for i in clear_spaces:
-			self.board[i] = init_board[i] 
+			# clears spaces
+			for i in clear_spaces:
+				self.board[i] = init_board[i] 
 
-		# evaluates spaces cleared to grant bonus points
-		spaces_cleared = len(clear_spaces)
-		if spaces_cleared > 4:
-			spaces_cleared -= 4
-			bonus_points += spaces_cleared*50
-		if bonus_points > 0:
-			print(f'bonus points scored: {bonus_points}')
-			self.points += bonus_points
+			# evaluates spaces cleared to grant bonus points
+			spaces_cleared = len(set(clear_spaces))
+			if spaces_cleared > 4:
+				spaces_cleared -= 4
+				bonus_points += spaces_cleared*50
+			if bonus_points > 0:
+				print(f'bonus points scored: {bonus_points}')
+				self.points += bonus_points
 
-	def get_new_dice(self):
-		number_new_dice = min(4,len([v for v in self.board if v.isnumeric()]))
-		if (number_new_dice == 0) & (self.jokers == 0):
-			self.game_over()
-		self.dice = [c+n for c,n in zip(np.random.choice(colors_pool,size=4),np.random.choice(numbers_pool,size=number_new_dice))][:]
-		#self.dice = ['R1','R2','R3','R4']
+		def get_new_dice():
+			if len(self.dice) == 0:
+				number_new_dice = min(4,len([v for v in self.board if v.isnumeric()]))
+				if (number_new_dice == 0) & (self.jokers == 0):
+					self.game_over()
+				else:
+					self.dice = [c+n for c,n in zip(np.random.choice(colors_pool,size=4),np.random.choice(numbers_pool,size=number_new_dice))][:]
+					#self.dice = ['R1','R2','R3','R4']
+
+		check_for_jokers()
+		score_board()
+		get_new_dice()
 
 	def game_over(self):
 		print(f'game over! your final score is: {self.points}')
 		self.gameover = True
-
-
+		exit()
