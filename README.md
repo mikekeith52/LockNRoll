@@ -63,7 +63,7 @@
 		==================
 """
 ```
-3. To score the board and clear any spaces based on combinations of dice you have placed on the board, type 3
+3. To score the board, clear any spaces based on combinations of dice you have placed on the board, and get new dice if you are out, type 3
 4. If you want to print an empty board, type 4 (this is useful to reference when trying to place a joker)
 5. To exit, type 5  
 
