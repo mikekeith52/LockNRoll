@@ -47,7 +47,7 @@
 """
 ```
 2. To place a joker, type 2 followed by a <space> followed by the position you want to place the joker
-    - If a space is already covered by a die, you can still place a joker there by uses the space's position as if there were no die there
+    - If a space is already covered by a die, you can still place a joker there by using the space's position as if there were no die there
     - Example: typing "2 6" will place a joker on position 6, whether or not that space has already been played, if you have a joker available
     - Your board will be rendered as
 ```python
@@ -63,7 +63,7 @@
 		==================
 """
 ```
-3. To score the board and clear any spaces, type 3
-4. If you want to print an empty board, type 4 (useful to reference when trying to place joker)
-5. To exit, type 5
+3. To score the board and clear any spaces based on combinations of dice you have placed on the board, type 3
+4. If you want to print an empty board, type 4 (this is useful to reference when trying to place a joker)
+5. To exit, type 5  
 **Note, there is no way to reverse a move, so be careful**
