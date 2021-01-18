@@ -30,8 +30,8 @@
 	- `pip install -r requirements.txt`
 	- `cd path/to/directory`
 	- `python app.py`
-1. To place a die, type 1 followed by a **space** followed by the die you want to place (ex: R4) followed by a comma, followed by the position you want to place it (no need for the leading zero, casing matters -- no "r4")
-	  - Example: typing: "1 R4,1" (no apostrophes) will place the R4 die on position 1, if you have an R4 die and if position 1 is available
+1. To place a die, type 1 followed by a **space** followed by the die you want to place (ex: R4) followed by a comma, followed by the position you want to place it (no need for the leading zero)
+	  - Example: typing: "1 R4,1" (no quotes) or "1, r4,1" will place the R4 die on position 1, if you have an R4 die and if position 1 is available
 	  - Your board will then be rendered as:
 ```python
 """

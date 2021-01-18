@@ -24,7 +24,7 @@ class main:
 				elif move == '0':
 					print(open('README.md','r').read())
 				elif move[0] == '1':
-					which_where = tuple(move[2:].split(','))
+					which_where = tuple(move[2:].upper().split(','))
 					g.place_die(which_where[0],which_where[1])
 				elif move[0] == '2':
 					g.place_joker(move[2:])
@@ -33,8 +33,7 @@ class main:
 				elif move == '4':
 					g.print_init_board()
 				elif move == '5':
-					print('exiting...')
-					break
+					g.game_over()
 				else:
 					print('invalid entry, make sure your casing is correct')
 			except (game.GameError.BoardPosNotEmpty,game.GameError.DieDoesNotExist,game.GameError.JokerNotAvailable) as e:

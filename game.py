@@ -92,6 +92,9 @@ class Game:
 		# ce for combo evaluated, i[0] is the color, i[1] is the number
 		unq_color = set([i[0] for i in combo])
 		unq_number = set([i[1] for i in combo])
+		unq_dice = list(set(combo))
+		
+		# keep track of the number of colors/numbers
 		dice_colors = {}
 		dice_numbers = {}
 		for d in combo:
@@ -103,66 +106,85 @@ class Game:
 				dice_numbers[d[1]]+=1
 			else:
 				dice_numbers[d[1]]=1
-		unq_dice = list(set(combo))
-		# same color same number
-		if ((len(unq_color) == 1) & (len(unq_number) == 1)) | ((len(unq_color) == 2) & (len(unq_number) == 2) & ('JO' in unq_dice)):
+
+		# keep track of number of jokers
+		num_jokers = len([v for v in combo if v == 'JO'])
+		# 2 or more jokers always clears the combo
+		if num_jokers == 2:
+			if (len(unq_color) == 2) & (len(unq_number) == 2):
+				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scsn')))
+				return score_index('scsn')
+			elif ((len(unq_number) == 2) & (len(unq_color) == 3)) | ((len(unq_number) == 3) & (len(unq_color) == 2)):
+				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scen')))
+				return score_index('scen')
+			else:
+				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ecen')))
+				return score_index('ecen')
+		# 3 or more jokers always results in the same color/same number combo			
+		elif num_jokers >= 3:
 			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scsn')))
-			return score_index['scsn']
-		# same color different number
-		elif ((len(unq_color) == 1) & (len(unq_number) == 4)) | ((len(unq_color) == 2) & (len(unq_number) == 4) & ('JO' in unq_dice)):
-			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scen')))
-			return score_index['scen']
-		# same number different color
-		elif ((len(unq_color) == 4) & (len(unq_number) == 1)) | ((len(unq_color) == 4) & (len(unq_number) == 2) & ('JO' in unq_dice)):
-			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ecsn')))
-			return score_index['ecsn']
-		# different number different color
-		elif ((len(unq_color) == 4) & (len(unq_number) == 4)):
-			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ecen')))
-			return score_index['ecen']
-		# two pair -- not quite working yet
-		elif ((len(unq_dice) == 2) & (len([v for v in combo if v == unq_dice[0]]) == 2) & (len([v for v in combo if v == unq_dice[1]]) == 2) & (len(unq_color) == 2) & (len(unq_number) == 2)) | ((len(unq_dice) == 3) & (len([v for v in combo if v == unq_dice[0]]) == 3) & (len([v for v in combo if v == unq_dice[1]]) == 3) & (len(unq_color) == 3) & (len(unq_number) == 3) & ('JO' in unq_dice)):
-			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('tp')))
-			return score_index['tp']
-		# same color only
-		elif (len(unq_color) == 1) | ((len(unq_color) == 2) & ('JO' in unq_dice)):
-			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('sc')))
-			return score_index['sc']
-		# same number only
-		elif (len(unq_number) == 1) | ((len(unq_number) == 2) & ('JO' in unq_dice)):
-			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('sn')))
-			return score_index['sn']
-		# pair color pair number
-		elif ((len(unq_color) == 2) & (len(unq_number) == 2) & (len(unq_dice) == 4)) | ((len(unq_color) == 3) & (len(unq_number) == 3) & (len(unq_dice) == 4) & ('JO' in unq_dice)):
-			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pcpn')))
-			return score_index['pcpn']
-		# each color only
-		elif (len(unq_color) == 4):
-			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ec')))
-			return score_index['ec']
-		# each number only
-		elif (len(unq_number) == 4):
-			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('en')))
-			return score_index['en']
-		# pair color or pair number -- this isn't quite working yet
-		elif (len(unq_color) == 2) | (len(unq_number) == 2):
-			if (len(unq_color) == 2) & (len(unq_number) != 2):
-				if (dice_colors[list(dice_colors.keys())[0]] == 2) & ((dice_colors[list(dice_colors.keys())[1]] == 2)):
-					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pc')))
-					return score_index['pc']
+			return score_index('scsn')
+		# all other combos with one joker can be written fairly simply
+		else:
+			# same color same number
+			if ((len(unq_color) == 1) & (len(unq_number) == 1)) | ((len(unq_color) == 2) & (len(unq_number) == 2) & ('JO' in unq_dice)):
+				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scsn')))
+				return score_index['scsn']
+			# same color different number
+			elif ((len(unq_color) == 1) & (len(unq_number) == 4)) | ((len(unq_color) == 2) & (len(unq_number) == 4) & ('JO' in unq_dice)):
+				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scen')))
+				return score_index['scen']
+			# same number different color
+			elif ((len(unq_color) == 4) & (len(unq_number) == 1)) | ((len(unq_color) == 4) & (len(unq_number) == 2) & ('JO' in unq_dice)):
+				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ecsn')))
+				return score_index['ecsn']
+			# different number different color
+			elif ((len(unq_color) == 4) & (len(unq_number) == 4)):
+				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ecen')))
+				return score_index['ecen']
+			# two pair -- not quite working yet
+			elif ((len(unq_dice) == 2) & (len([v for v in combo if v == unq_dice[0]]) == 2) & (len([v for v in combo if v == unq_dice[1]]) == 2) & (len(unq_color) == 2) & (len(unq_number) == 2)) | ((len(unq_dice) == 3) & (len([v for v in combo if v == unq_dice[0]]) == 3) & (len([v for v in combo if v == unq_dice[1]]) == 3) & ((len(unq_color) == 3) | (len(unq_number) == 3)) & ('JO' in unq_dice)):
+				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('tp')))
+				return score_index['tp']
+			# same color only
+			elif (len(unq_color) == 1) | ((len(unq_color) == 2) & ('JO' in unq_dice)):
+				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('sc')))
+				return score_index['sc']
+			# same number only
+			elif (len(unq_number) == 1) | ((len(unq_number) == 2) & ('JO' in unq_dice)):
+				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('sn')))
+				return score_index['sn']
+			# pair color pair number
+			elif ((len(unq_color) == 2) & (len(unq_number) == 2) & (len(unq_dice) == 4)) | ((len(unq_color) == 3) & (len(unq_number) == 3) & (len(unq_dice) == 4) & ('JO' in unq_dice)):
+				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pcpn')))
+				return score_index['pcpn']
+			# each color only
+			elif (len(unq_color) == 4):
+				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ec')))
+				return score_index['ec']
+			# each number only
+			elif (len(unq_number) == 4):
+				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('en')))
+				return score_index['en']
+			# pair color or pair number -- this isn't quite working yet
+			elif (len(unq_color) == 2) | (len(unq_number) == 2):
+				if (len(unq_color) == 2) & (len(unq_number) != 2):
+					if (dice_colors[list(dice_colors.keys())[0]] == 2) & ((dice_colors[list(dice_colors.keys())[1]] == 2)):
+						print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pc')))
+						return score_index['pc']
+					else:
+						return [0,False]
+				elif unq_number == 2:
+					if (dice_numbers[list(dice_numbers.keys())[0]] == 2) & ((dice_numbers[list(dice_numbers.keys())[1]] == 2)):
+						print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pn')))
+						return score_index['pn']
+					else:
+						return [0,False]
 				else:
 					return [0,False]
-			elif unq_number == 2:
-				if (dice_numbers[list(dice_numbers.keys())[0]] == 2) & ((dice_numbers[list(dice_numbers.keys())[1]] == 2)):
-					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pn')))
-					return score_index['pn']
-				else:
-					return [0,False]
+			# everything else
 			else:
 				return [0,False]
-		# everything else
-		else:
-			return [0,False]
 
 	def print_board(self):
 		print(board_graph_rep.format(self.board[0],self.board[1],self.board[2],self.board[3],
@@ -184,7 +206,8 @@ class Game:
 		    where is a space on the 1-indexed board (see init_board global) and must be int-like (ex: 1, 1.0, '1', '01', ' 1') between 1 and 16
 		"""
 		if which in self.dice: # is the die in self.dice?
-			where = int(where) # try to cast where to int type
+			try: where = int(where) # try to cast where to int type
+			except ValueError: raise GameError.BoardPosNotEmpty(f'Space {where} is not available') # if can't cast where as an int, raise a game error
 			if self.board[where-1].isnumeric(): # check if the str element in the board list is a number (ex: not 'R4'), if it is that space is open
 				if where == int(self.board[where-1]): # check if which is between 1 and 16
 					self.board[where-1] = which # place which on the open space on the board
