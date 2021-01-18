@@ -25,9 +25,9 @@ class main:
 					print(open('README.md','r').read())
 				elif move[0] == '1':
 					which_where = tuple(move[2:].split(','))
-					g.place_die(which_where[0],int(which_where[1]))
+					g.place_die(which_where[0],which_where[1])
 				elif move[0] == '2':
-					g.place_joker(int(move[2:]))
+					g.place_joker(move[2:])
 				elif move == '3':
 					g.lock_n_roll()
 				elif move == '4':

@@ -92,7 +92,18 @@ class Game:
 		# ce for combo evaluated, i[0] is the color, i[1] is the number
 		unq_color = set([i[0] for i in combo])
 		unq_number = set([i[1] for i in combo])
-		unq_dice = set(combo)
+		dice_colors = {}
+		dice_numbers = {}
+		for d in combo:
+			if d[0] in dice_colors.keys():
+				dice_colors[d[0]]+=1
+			else:
+				dice_colors[d[0]]=1
+			if d[1] in dice_numbers.keys():
+				dice_numbers[d[1]]+=1
+			else:
+				dice_numbers[d[1]]=1
+		unq_dice = list(set(combo))
 		# same color same number
 		if ((len(unq_color) == 1) & (len(unq_number) == 1)) | ((len(unq_color) == 2) & (len(unq_number) == 2) & ('JO' in unq_dice)):
 			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scsn')))
@@ -110,7 +121,7 @@ class Game:
 			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ecen')))
 			return score_index['ecen']
 		# two pair -- not quite working yet
-		elif ((len(unq_color) == 2) & (len(unq_number) == 2) & (len(unq_dice) == 2)) | ((len(unq_color) == 3) & (len(unq_number) == 3) & (len(unq_dice) == 3) & ('JO' in unq_dice)):
+		elif ((len(unq_dice) == 2) & (len([v for v in combo if v == unq_dice[0]]) == 2) & (len([v for v in combo if v == unq_dice[1]]) == 2) & (len(unq_color) == 2) & (len(unq_number) == 2)) | ((len(unq_dice) == 3) & (len([v for v in combo if v == unq_dice[0]]) == 3) & (len([v for v in combo if v == unq_dice[1]]) == 3) & (len(unq_color) == 3) & (len(unq_number) == 3) & ('JO' in unq_dice)):
 			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('tp')))
 			return score_index['tp']
 		# same color only
@@ -133,14 +144,22 @@ class Game:
 		elif (len(unq_number) == 4):
 			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('en')))
 			return score_index['en']
-		# pair color -- this isn't quite working yet
-		elif ((len(unq_color) == 2) & (len(unq_dice) >= 3)) | ((len(unq_color) == 3) & ('JO' in unq_dice)):
-			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pc')))
-			return score_index['pc']
-		# pair number -- this isn't quite working yet
-		elif ((len(unq_number) == 2) & (len(unq_dice) >= 3)) | ((len(unq_number) == 3) & ('JO' in unq_dice)):
-			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pn')))
-			return score_index['pn']
+		# pair color or pair number -- this isn't quite working yet
+		elif (len(unq_color) == 2) | (len(unq_number) == 2):
+			if (len(unq_color) == 2) & (len(unq_number) != 2):
+				if (dice_colors[list(dice_colors.keys())[0]] == 2) & ((dice_colors[list(dice_colors.keys())[1]] == 2)):
+					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pc')))
+					return score_index['pc']
+				else:
+					return [0,False]
+			elif unq_number == 2:
+				if (dice_numbers[list(dice_numbers.keys())[0]] == 2) & ((dice_numbers[list(dice_numbers.keys())[1]] == 2)):
+					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pn')))
+					return score_index['pn']
+				else:
+					return [0,False]
+			else:
+				return [0,False]
 		# everything else
 		else:
 			return [0,False]
@@ -183,11 +202,11 @@ class Game:
 	def place_joker(self,where):
 		""" where is a space on the 1-indexed board (see init_board global) and must be int-like (ex: 1, 1.0, '1', '01', True)
 		"""
-			if self.jokers > 0:
-				self.board[where-1] = 'JO'
-				self.jokers -= 1
-			else:
-				raise GameError.JokerNotAvailable(f'joker not avaialable, earn {self.next_joker} more non-bonus points for next one')
+		if self.jokers > 0:
+			self.board[int(where)-1] = 'JO'
+			self.jokers -= 1
+		else:
+			raise GameError.JokerNotAvailable(f'joker not avaialable, earn {self.next_joker} more non-bonus points for next one')
 
 	def lock_n_roll(self):
 		""" LOCK N' ROLL BRAH!!
