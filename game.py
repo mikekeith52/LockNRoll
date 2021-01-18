@@ -275,6 +275,17 @@ class Game:
 			for i in clear_spaces:
 				self.board[i] = init_board[i] 
 
+			# if all spaces were cleared after scoring the board, it is the same as getting another joker/joker bonus
+			if (len([i for i in self.board if i.isnumeric()]) == 16) & (len(clear_spaces) > 0:)
+				if self.jokers == 2:
+					bonus_points += self.next_joker_bonus
+					self.next_joker_bonus = min(self.next_joker_bonus*2,64000)
+				else:
+					self.jokers+=1
+				
+				self.next_joker_points = min(1500,self.next_joker_points+250)
+				self.next_joker = self.next_joker + self.next_joker_points
+
 			# evaluates spaces cleared to grant bonus points
 			spaces_cleared = len(set(clear_spaces))
 			if spaces_cleared > 4:
