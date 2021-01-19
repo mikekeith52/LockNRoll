@@ -97,7 +97,7 @@ class Game:
 			else:
 				return False
 
-		# what everything is worth
+		# what everything is worth/whether to clear spaces on the board
 		score_index = {
 			'scsn':[400,True],
 			'scen':[200,True],
@@ -328,7 +328,7 @@ class Game:
 				if (number_new_dice == 0) & (self.jokers == 0):
 					self.game_over()
 				else:
-					self.dice = [c+n for c,n in zip(np.random.choice(colors_pool,size=4),np.random.choice(numbers_pool,size=number_new_dice))][:]
+					self.dice = [c+n for c,n in zip(np.random.choice(colors_pool,size=number_new_dice),np.random.choice(numbers_pool,size=number_new_dice))][:]
 					#self.dice = ['R1','R2','R3','R4']
 
 		check_for_jokers()
