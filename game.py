@@ -81,6 +81,23 @@ class Game:
 					return False
 			return True
 
+		def pair_color(combo):
+			clrs = [i[0] for i in combo]
+			dice_colors = {v:clrs.count(v) for v in clrs}
+			if (dice_colors[list(dice_colors.keys())[0]] == 2) & ((dice_colors[list(dice_colors.keys())[1]] == 2)):
+				return True
+			else:
+				return False
+
+		def pair_number(combo):
+			nmbrs = [i[1] for i in combo]
+			dice_numbers = {v:nmbrs.count(v) for v in nmbrs}
+			if (dice_numbers[list(dice_numbers.keys())[0]] == 2) & ((dice_numbers[list(dice_numbers.keys())[1]] == 2)):
+				return True
+			else:
+				return False
+
+		# what everything is worth
 		score_index = {
 			'scsn':[400,True],
 			'scen':[200,True],
@@ -95,26 +112,13 @@ class Game:
 			'pc':[5,False],
 			'pn':[5,False]
 		}
+
 		# ce for combo evaluated, i[0] is the color, i[1] is the number
 		unq_color = set([i[0] for i in combo])
 		unq_number = set([i[1] for i in combo])
-		unq_dice = list(set(combo))
-		
-		# keep track of the number of colors/numbers
-		dice_colors = {}
-		dice_numbers = {}
-		for d in combo:
-			if d[0] in dice_colors.keys():
-				dice_colors[d[0]]+=1
-			else:
-				dice_colors[d[0]]=1
-			if d[1] in dice_numbers.keys():
-				dice_numbers[d[1]]+=1
-			else:
-				dice_numbers[d[1]]=1
+		unq_dice = set(combo)
+		num_jokers = combo.count('JO')
 
-		# keep track of number of jokers
-		num_jokers = len([v for v in combo if v == 'JO'])
 		# 2 or more jokers always clears the combo
 		if num_jokers == 2:
 			if (len(unq_color) == 2) & (len(unq_number) == 2):
@@ -172,22 +176,14 @@ class Game:
 			elif (len(unq_number) == 4):
 				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('en')))
 				return score_index['en']
-			# pair color or pair number
-			elif (len(unq_color) == 2) | (len(unq_number) == 2):
-				if (len(unq_color) == 2) & (len(unq_number) != 2):
-					if (dice_colors[list(dice_colors.keys())[0]] == 2) & ((dice_colors[list(dice_colors.keys())[1]] == 2)):
-						print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pc')))
-						return score_index['pc']
-					else:
-						return [0,False]
-				elif unq_number == 2:
-					if (dice_numbers[list(dice_numbers.keys())[0]] == 2) & ((dice_numbers[list(dice_numbers.keys())[1]] == 2)):
-						print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pn')))
-						return score_index['pn']
-					else:
-						return [0,False]
-				else:
-					return [0,False]
+			# pair color
+			elif (len(unq_color) == 2) & (pair_color(combo)):
+				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pc')))
+				return score_index['pc']
+			# pair number
+			elif (len(unq_number) == 2) & (pair_number(combo)):
+				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pn')))
+				return score_index['pn']
 			# everything else
 			else:
 				return [0,False]
