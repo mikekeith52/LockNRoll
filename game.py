@@ -73,7 +73,7 @@ class Game:
 		""" combo is a list of dice to be scored (ex: ["R1","B2","G3","Y4"])
 		"""
 		def points(score_key):
-			return int(round(score_index[score_key][0]*.75**(len([i for i in combo if i == 'JO']))))
+			return int(round(score_index[score_key][0]*.75**num_jokers))
 
 		def two_pair(combo):
 			for d in unq_dice:
@@ -266,7 +266,7 @@ class Game:
 				board_combo = [self.board[v] for v in combo if not self.board[v].isnumeric()] # ex: ['R1','R2','R3','R4']
 				if len(board_combo) == 4:
 					points_clear = self._score_combo(board_combo)
-					points = int(round(points_clear[0]*.75**len([i for i in board_combo if i == 'JO'])))
+					points = int(round(points_clear[0]*.75**board_combo.count('JO')))
 					clear = points_clear[1]
 					self.points += points
 					if clear:
