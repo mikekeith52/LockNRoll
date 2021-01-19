@@ -21,7 +21,7 @@ board_graph_rep ="""==================
 ||{}||{}||{}||{}||
 =================="""
 
-# these are the indices of the baord that can be scored
+# these are the indices of the board that can be scored
 combination_idx = [
 	[0,1,2,3],
 	[4,5,6,7],
@@ -74,6 +74,12 @@ class Game:
 		"""
 		def points(score_key):
 			return int(round(score_index[score_key][0]*.75**(len([i for i in combo if i == 'JO']))))
+
+		def two_pair(combo):
+			for d in unq_dice:
+				if not (len([v for v in combo if v == d]) == 2):
+					return False
+			return True
 
 		score_index = {
 			'scsn':[400,True],
@@ -142,8 +148,8 @@ class Game:
 			elif ((len(unq_color) == 4) & (len(unq_number) == 4)):
 				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ecen')))
 				return score_index['ecen']
-			# two pair -- not quite working yet
-			elif ((len(unq_dice) == 2) & (len([v for v in combo if v == unq_dice[0]]) == 2) & (len([v for v in combo if v == unq_dice[1]]) == 2) & (len(unq_color) == 2) & (len(unq_number) == 2)) | ((len(unq_dice) == 3) & (len([v for v in combo if v == unq_dice[0]]) == 3) & (len([v for v in combo if v == unq_dice[1]]) == 3) & ((len(unq_color) == 3) | (len(unq_number) == 3)) & ('JO' in unq_dice)):
+			# two pair
+			elif ((len(unq_dice) == 2) & (two_pair(combo))) | ((len(unq_dice) == 3) & ('JO' in unq_dice)):
 				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('tp')))
 				return score_index['tp']
 			# same color only
@@ -166,7 +172,7 @@ class Game:
 			elif (len(unq_number) == 4):
 				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('en')))
 				return score_index['en']
-			# pair color or pair number -- this isn't quite working yet
+			# pair color or pair number
 			elif (len(unq_color) == 2) | (len(unq_number) == 2):
 				if (len(unq_color) == 2) & (len(unq_number) != 2):
 					if (dice_colors[list(dice_colors.keys())[0]] == 2) & ((dice_colors[list(dice_colors.keys())[1]] == 2)):
