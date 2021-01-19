@@ -77,7 +77,7 @@ class Game:
 
 		def two_pair(combo):
 			for d in unq_dice:
-				if not (len([v for v in combo if v == d]) == 2):
+				if not (combo.count(d) == 2):
 					return False
 			return True
 
@@ -307,9 +307,6 @@ class Game:
 					self.next_joker_bonus = min(self.next_joker_bonus*2,64000)
 				else:
 					self.jokers+=1
-				
-				self.next_joker_points = min(1500,self.next_joker_points+250)
-				self.next_joker = self.next_joker + self.next_joker_points
 
 			# evaluates spaces cleared to grant bonus points
 			spaces_cleared = len(set(clear_spaces))
