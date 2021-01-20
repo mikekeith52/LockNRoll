@@ -73,29 +73,29 @@ class Game:
 		""" combo is a list of dice to be scored (ex: ["R1","B2","G3","Y4"])
 		"""
 		def points(score_key):
+			""" evaluates how much the combo is worth
+				to do: re-evaluate scoring with more than 1 joker
+			"""
 			return int(round(score_index[score_key][0]*.75**num_jokers))
+		
+		def one_pair(combo,idx):
+			""" evaluates if the combo is a pair color or pair number
+				for pair color, idx=0 (since color is first element of the dice)
+				for pair number, idx=1 (since number is second element of the dice)
+				only gets called if there are two unique colors/numbers in the combo
+			"""
+			tally = [i[idx] for i in combo]
+			tally_cnts = [tally.count(i) for i in tally]
+			return True if tally_cnts == [2,2] else False
 
 		def two_pair(combo):
+			""" evaluates if the combo is a two pair
+				only gets called when len(unq_dice) == 2 (two unique dice in the combo)
+			"""
 			for d in unq_dice:
 				if not (combo.count(d) == 2):
 					return False
 			return True
-
-		def pair_color(combo):
-			clrs = [i[0] for i in combo]
-			dice_colors = {v:clrs.count(v) for v in clrs}
-			if (dice_colors[list(dice_colors.keys())[0]] == 2) & ((dice_colors[list(dice_colors.keys())[1]] == 2)):
-				return True
-			else:
-				return False
-
-		def pair_number(combo):
-			nmbrs = [i[1] for i in combo]
-			dice_numbers = {v:nmbrs.count(v) for v in nmbrs}
-			if (dice_numbers[list(dice_numbers.keys())[0]] == 2) & ((dice_numbers[list(dice_numbers.keys())[1]] == 2)):
-				return True
-			else:
-				return False
 
 		# what everything is worth/whether to clear spaces on the board
 		score_index = {
@@ -177,11 +177,11 @@ class Game:
 				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('en')))
 				return score_index['en']
 			# pair color
-			elif (len(unq_color) == 2) & (pair_color(combo)):
+			elif (len(unq_color) == 2) & (one_pair(combo,0)):
 				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pc')))
 				return score_index['pc']
 			# pair number
-			elif (len(unq_number) == 2) & (pair_number(combo)):
+			elif (len(unq_number) == 2) & (one_pair(combo,1)):
 				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pn')))
 				return score_index['pn']
 			# everything else
