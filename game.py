@@ -53,6 +53,8 @@ class GameError(Exception):
 		pass
 	class JokerNotAvailable(Exception):
 		pass
+	class JokeronotherJoker(Exception):
+		pass
 
 # the game class
 class Game:
@@ -60,12 +62,13 @@ class Game:
 		self.board = init_board[:]
 		self.dice = [c+n for c,n in zip(np.random.choice(colors_pool,size=4),np.random.choice(numbers_pool,size=4))][:]
 		#self.dice = ['R1','R2','R3','R4']
-		self.jokers = 0
+		self.jokers = 1
 		self.next_joker = 250 # points until the next joker (this will change as you gain points)
 		self.next_joker_points = 250 # total points until the next joker (this won't change until self.joker goes under 0, then it will increase or stay the same)
 		self.next_joker_bonus = 1000 # if you have two jokers and earn another, this is how many points will be awarded to you
 		self.index_not_scored = combination_idx[:] # a list of indices representing board combos that can be evaluated on your next lock n' roll
 		                                           # elements of this list are deleted and re-added depending on parts of the board that have already been scored/opened back up after a clear
+		self.joker_on_board = [] # to fix issue where jokers in an un-cleared combo get scored over and over
 		self.points = 0 # your total score
 		self.gameover = False
 
@@ -86,7 +89,7 @@ class Game:
 			"""
 			tally = [i[idx] for i in combo]
 			tally_cnts = [tally.count(i) for i in tally]
-			return True if tally_cnts == [2,2] else False
+			return True if tally_cnts == [2,2,2,2] else False
 
 		def two_pair(combo):
 			""" evaluates if the combo is a two pair
@@ -228,8 +231,11 @@ class Game:
 		""" where is a space on the 1-indexed board (see init_board global) and must be int-like (ex: 1, 1.0, '1', '01', True)
 		"""
 		if self.jokers > 0:
-			self.board[int(where)-1] = 'JO'
-			self.jokers -= 1
+			if self.board[int(where)-1] != 'JO':
+				self.board[int(where)-1] = 'JO'
+				self.jokers -= 1
+			else:
+				raise GameError.JokeronotherJoker('cannot place a joker on another joker!')
 		else:
 			raise GameError.JokerNotAvailable(f'joker not avaialable, earn {self.next_joker} more non-bonus points for next one')
 
@@ -242,11 +248,13 @@ class Game:
 				opted for a more complex solution (as opposed to O(1) best-case) to improve readability and because board is small
 				i might revist this
 			"""
+			# TO DO - fix issue that causes jokers to be re-scored over and over
 			for i, v in enumerate(self.board):
-				if v == 'JO':
+				if (v == 'JO') & (i not in self.joker_on_board):
 					for ci in combination_idx:
 						if (i in ci) & (ci not in self.index_not_scored):
 							self.index_not_scored.append(ci)
+					self.joker_on_board.append(i)
 
 		def score_board():
 			""" scores board by checking scorable combinations (namespace combo) and the patterns on those combinations
@@ -275,6 +283,7 @@ class Game:
 							for ci in combination_idx:
 								if i in ci:
 									add_idx.append(ci) # brings back any squares that have been unlocked with the clear
+						self.joker_on_board = [e for e in self.joker_on_board if e != i]
 					else:
 						delete_idx.append(combo) # to avoid double scoring
 					self.next_joker -= points
