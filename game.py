@@ -1,4 +1,4 @@
-import numpy as np
+from numpy import random
 
 # to form the dice, the following two lists are drawn from randomly
 colors_pool = ['R','Y','G','B']
@@ -10,7 +10,7 @@ init_board = ['01','02','03','04',
               '09','10','11','12',
               '13','14','15','16']
 
-# this is command-line graphical representation of the board
+# this is the command-line graphical representation of the board
 board_graph_rep ="""==================
 ||{}||{}||{}||{}||
 ==================
@@ -53,16 +53,16 @@ class GameError(Exception):
 		pass
 	class JokerNotAvailable(Exception):
 		pass
-	class JokeronotherJoker(Exception):
+	class JokeronJoker(Exception):
 		pass
 
 # the game class
 class Game:
 	def __init__(self):
 		self.board = init_board[:]
-		self.dice = [c+n for c,n in zip(np.random.choice(colors_pool,size=4),np.random.choice(numbers_pool,size=4))][:]
+		self.dice = [c+n for c,n in zip(random.choice(colors_pool,size=4),random.choice(numbers_pool,size=4))][:]
 		#self.dice = ['R1','R2','R3','R4']
-		self.jokers = 1
+		self.jokers = 0
 		self.next_joker = 250 # points until the next joker (this will change as you gain points)
 		self.next_joker_points = 250 # total points until the next joker (this won't change until self.joker goes under 0, then it will increase or stay the same)
 		self.next_joker_bonus = 1000 # if you have two jokers and earn another, this is how many points will be awarded to you
@@ -126,18 +126,18 @@ class Game:
 		if num_jokers == 2:
 			if (len(unq_color) == 2) & (len(unq_number) == 2):
 				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scsn')))
-				return score_index('scsn')
+				return score_index['scsn']
 			elif ((len(unq_number) == 2) & (len(unq_color) == 3)) | ((len(unq_number) == 3) & (len(unq_color) == 2)):
 				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scen')))
-				return score_index('scen')
+				return score_index['scen']
 			else:
 				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ecen')))
-				return score_index('ecen')
+				return score_index['ecen']
 		# 3 or more jokers always results in the same color/same number combo			
 		elif num_jokers >= 3:
 			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scsn')))
-			return score_index('scsn')
-		# all other combos with one joker can be written fairly simply
+			return score_index['scsn']
+		# all other combos with one or no joker can be written fairly simply
 		else:
 			# same color same number
 			if ((len(unq_color) == 1) & (len(unq_number) == 1)) | ((len(unq_color) == 2) & (len(unq_number) == 2) & ('JO' in unq_dice)):
@@ -213,8 +213,8 @@ class Game:
 		if which in self.dice: # is the die in self.dice?
 			try: where = int(where) # try to cast where to int type
 			except ValueError: raise GameError.BoardPosNotEmpty(f'Space {where} is not available') # if can't cast where as an int, raise a game error
-			if self.board[where-1].isnumeric(): # check if the str element in the board list is a number (ex: not 'R4'), if it is that space is open
-				if where == int(self.board[where-1]): # check if which is between 1 and 16
+			if self.board[where-1].isnumeric(): # check if the str element in the board list is a number (ex: not 'R4'), if it is, that space is open
+				if where == int(self.board[where-1]): # check if which is between 1 and 16 (valid board positions)
 					self.board[where-1] = which # place which on the open space on the board
 					for i, d in enumerate(self.dice):
 						if d == which: # delete which from the self.dice list
@@ -235,7 +235,7 @@ class Game:
 				self.board[int(where)-1] = 'JO'
 				self.jokers -= 1
 			else:
-				raise GameError.JokeronotherJoker('cannot place a joker on another joker!')
+				raise GameError.JokeronJoker('cannot place a joker on another joker!')
 		else:
 			raise GameError.JokerNotAvailable(f'joker not avaialable, earn {self.next_joker} more non-bonus points for next one')
 
@@ -245,12 +245,11 @@ class Game:
 		def check_for_jokers():
 			""" checks for jokers on the board and opens up combinations that are touching the joker to be evaluated in the next score_board() call
 				O(N) --> O(16) in all cases
-				opted for a more complex solution (as opposed to O(1) best-case) to improve readability and because board is small
+				opted for a more complex solution (as opposed to O(1) worst-case) to improve readability and because board is small
 				i might revist this
 			"""
-			# TO DO - fix issue that causes jokers to be re-scored over and over
 			for i, v in enumerate(self.board):
-				if (v == 'JO') & (i not in self.joker_on_board):
+				if (v == 'JO') & (i not in self.joker_on_board): # that second condition is to make sure jokers aren't scored over and over
 					for ci in combination_idx:
 						if (i in ci) & (ci not in self.index_not_scored):
 							self.index_not_scored.append(ci)
@@ -283,7 +282,7 @@ class Game:
 							for ci in combination_idx:
 								if i in ci:
 									add_idx.append(ci) # brings back any squares that have been unlocked with the clear
-						self.joker_on_board = [e for e in self.joker_on_board if e != i]
+						self.joker_on_board = [e for e in self.joker_on_board if e != i] # combo with a joker on it cleared, no longer keep track of where the joker is
 					else:
 						delete_idx.append(combo) # to avoid double scoring
 					self.next_joker -= points
@@ -334,7 +333,7 @@ class Game:
 				if (number_new_dice == 0) & (self.jokers == 0):
 					self.game_over()
 				else:
-					self.dice = [c+n for c,n in zip(np.random.choice(colors_pool,size=number_new_dice),np.random.choice(numbers_pool,size=number_new_dice))][:]
+					self.dice = [c+n for c,n in zip(random.choice(colors_pool,size=number_new_dice),random.choice(numbers_pool,size=number_new_dice))][:]
 					#self.dice = ['R1','R2','R3','R4']
 
 		check_for_jokers()
