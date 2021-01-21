@@ -36,7 +36,7 @@ class main:
 					g.game_over()
 				else:
 					print('invalid entry, make sure your casing is correct')
-			except (game.GameError) as e:
+			except (game.GameError,IndexError) as e:
 				print(e)
 
 if __name__ == '__main__':
