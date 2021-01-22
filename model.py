@@ -1,86 +1,108 @@
 import random
 import numpy as np
+import pandas as pd
 from collections import deque
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
+from itertools import product
 
+import game
+from ActionHash import ActionHash
+from config import GAMMA, LEARNING_RATE, MEMORY_SIZE, BATCH_SIZE, EXPLORATION_MAX, EXPLORATION_MIN, EXPLORATION_DECAY
 
-from scores.score_logger import ScoreLogger
+def evaluate_reward(game_state,action):
+    init_points = game_state.points
+    init_jokers = game_state.jokers
+    choice = ActionHash().get(action)
 
-GAMMA = 0.95
-LEARNING_RATE = 0.001
+    if choice[0] == 'JO':
+        game_state.place_joker(choice[1] + 1)
+    else:
+        game_state.place_die(choice[0],choice[1] + 1)
+    game_state.lock_n_roll()
 
-MEMORY_SIZE = 1000000
-BATCH_SIZE = 20
+    if game_state.gameover:
+        return -10
+    else:
+        return (game_state.points - init_points)
 
-EXPLORATION_MAX = 1.0
-EXPLORATION_MIN = 0.01
-EXPLORATION_DECAY = 0.995
+class AVActions:
+    def __init__(self,game_state):
+        self.game_state = game_state
+        expand_grid = lambda d: pd.DataFrame([row for row in product(*d.values())],columns=d.keys())
+        actions = expand_grid({'DIE':game_state.dice,'AVSPACE':[i for i,v in enumerate(game_state.board) if v.isnumeric()]})
+        if game_state.jokers > 0:
+            actions = actions.append(expand_grid({'DIE':['JO'],
+                'AVSPACE':[i for i,v in enumerate(game_state.board) if i not in game_state.joker_on_board]}),
+                ignore_index=True,sort=False)
+
+        actions = actions.set_index(['DIE','AVSPACE']).sort_index()
+        self.available = actions.index
+        state = {}
+        for i,v in enumerate(game_state.board):
+            state[f'BOARD_IDX_{i}_JO'] = 0
+            for c in 'YGBR':
+                state[f'BOARD_IDX_{i}_C{c}'] = 0
+            if (not v.isnumeric()) & (not v == 'JO'):
+                state[f'BOARD_IDX_{i}_C{v[0]}'] = 1
+            for n in '1234':
+                state[f'BOARD_IDX_{i}_N{n}'] = 0
+            if (not v.isnumeric()) & (not v == 'JO'):
+                state[f'BOARD_IDX_{i}_N{v[1]}'] = 1
+            if v == 'JO':
+                state[f'BOARD_IDX_{i}_JO'] = 1
+        self.state = tuple(state.values())
 
 class DQNSolver:
-
-    def __init__(self, observation_space, action_space):
-        self.exploration_rate = EXPLORATION_MAX
-
+    def __init__(self, action_space, observation_space, memory = None, model = None, exploration_rate = None):
+        self.exploration_rate = EXPLORATION_MAX if exploration_rate is None else exploration_rate
         self.action_space = action_space
-        self.memory = deque(maxlen=MEMORY_SIZE)
+        self.actionhash = ActionHash()
+        self.memory = deque(maxlen=MEMORY_SIZE) if memory is None else memory
+        if model is None:
+            self.model = Sequential()
+            self.model.add(Dense(500, input_shape=(observation_space,), activation="relu"))
+            self.model.add(Dense(500, activation="relu"))
+            self.model.add(Dense(self.action_space, activation="linear"))
+            self.model.compile(loss="mse", optimizer=Adam(lr=LEARNING_RATE))
+        else:
+            self.model = model
 
-        self.model = Sequential()
-        self.model.add(Dense(24, input_shape=(observation_space,), activation="relu"))
-        self.model.add(Dense(24, activation="relu"))
-        self.model.add(Dense(self.action_space, activation="linear"))
-        self.model.compile(loss="mse", optimizer=Adam(lr=LEARNING_RATE))
-
+    # state will be a tuple of 1/0s, action is the chosen action's index, reward is the total points gained from the action, next_state is another tuple of 0/1, done is whether there is a game over
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
 
-    def act(self, state):
+    def act(self, game, state):
+        available_actions = AVActions(game).available
         if np.random.rand() < self.exploration_rate:
-            return random.randrange(self.action_space)
+            while True:
+                choice = np.random.choice(self.action_space,size=1)[0]
+                if self.actionhash.get(choice) in available_actions:
+                    return choice
         q_values = self.model.predict(state)
-        return np.argmax(q_values[0])
+        q_hashed = {} # chaining hash table
+        for i, v in enumerate(q_values[0]):
+            if v not in q_hashed:
+                q_hashed[v] = [i]
+            else:
+                q_hashed[v].append(i)
+        q_sorted = sorted(q_values[0])[::-1] # rate all actions best-to-worst
+        for q in q_sorted: # iterate until you find the best available action
+            for i in q_hashed[q]:
+                if self.actionhash.get(i) in available_actions:
+                    return i
 
-    def experience_replay(self):
+    def experience_replay(self, game):
         if len(self.memory) < BATCH_SIZE:
             return
         batch = random.sample(self.memory, BATCH_SIZE)
         for state, action, reward, state_next, terminal in batch:
             q_update = reward
             if not terminal:
-                q_update = (reward + GAMMA * np.amax(self.model.predict(state_next)[0]))
+                q_update = (reward + GAMMA * np.median(self.model.predict(state_next)[0])) # use mean becasue you don't know the actions available in the next state every time
             q_values = self.model.predict(state)
             q_values[0][action] = q_update
             self.model.fit(state, q_values, verbose=0)
         self.exploration_rate *= EXPLORATION_DECAY
         self.exploration_rate = max(EXPLORATION_MIN, self.exploration_rate)
-
-
-def train_model():
-    observation_space = env.observation_space.shape[0]
-    action_space = env.action_space.n
-    dqn_solver = DQNSolver(observation_space, action_space)
-    run = 0
-    while True:
-        run += 1
-        state = env.reset()
-        state = np.reshape(state, [1, observation_space])
-        step = 0
-        while True:
-            step += 1
-            #env.render()
-            action = dqn_solver.act(state)
-            state_next, reward, terminal, info = env.step(action)
-            reward = reward if not terminal else -reward
-            state_next = np.reshape(state_next, [1, observation_space])
-            dqn_solver.remember(state, action, reward, state_next, terminal)
-            state = state_next
-            if terminal:
-                print("Run: " + str(run) + ", exploration: " + str(dqn_solver.exploration_rate) + ", score: " + str(step))
-                score_logger.add_score(step, run)
-                break
-            dqn_solver.experience_replay()
-
-
-if __name__ == "__main__":
-    cartpole()
