@@ -1,5 +1,10 @@
 
-# WELCOME TO LOCK N ROLL -- PYTHON
+# WELCOME TO LOCK N' ROLL PYTHON!
+*Lock n' roll brah*
+
+## AI
+- An AI is being trained to master this game, see AI.MD for an overview of that process
+- This readme is an overview of lock n' roll the game and how to play it using the Python application
 
 ## Rules
 ![](https://i2.wp.com/cannedbanana.files.wordpress.com/2009/01/lnr-rules.jpg)
@@ -65,6 +70,7 @@
 ```
 3. To score the board, clear any spaces based on combinations of dice you have placed on the board, and get new dice if you are out, type 3
 4. If you want to print an empty board, type 4 (this is useful to reference when trying to place a joker)
-5. To exit, type 5  
+5. To let the AI play a move, type 5
+6. To exit, type 6 
 
 **Note, there is no way to reverse a move, so be careful**

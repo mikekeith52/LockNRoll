@@ -1,12 +1,13 @@
 import game
 
 interface = """what move do you want to play:
-	0: readme
-	1: place die (which,where)
-	2: place joker (where)
-	3: lock n' roll
-	4: see empty board (useful to reference when attempting to place a joker)
-	5: exit
+  0: readme
+  1: place die (which,where)
+  2: place joker (where)
+  3: lock n' roll
+  4: see empty board (useful to reference when attempting to place a joker)
+  5: let the AI play
+  6: exit
 selection: """
 
 class main:
@@ -33,6 +34,9 @@ class main:
 				elif move == '4':
 					g.print_init_board()
 				elif move == '5':
+					from AIPlay import AIPlay
+					AIPlay(g)
+				elif move == '6':
 					g.game_over()
 				else:
 					print('invalid entry, make sure your casing is correct')

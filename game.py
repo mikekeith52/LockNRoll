@@ -58,7 +58,8 @@ class GameError(Exception):
 
 # the game class
 class Game:
-	def __init__(self):
+	def __init__(self,quiet=False):
+		self.quiet = quiet
 		self.board = init_board[:]
 		self.dice = [c+n for c,n in zip(random.choice(colors_pool,size=4),random.choice(numbers_pool,size=4))][:]
 		#self.dice = ['R1','R2','R3','R4']
@@ -72,7 +73,7 @@ class Game:
 		self.points = 0 # your total score
 		self.gameover = False
 		self.moves = 0
-
+		
 	def _score_combo(self,combo):
 		""" combo is a list of dice to be scored (ex: ["R1","B2","G3","Y4"])
 		"""
@@ -126,67 +127,83 @@ class Game:
 		# 2 or more jokers always clears the combo
 		if num_jokers == 2:
 			if (len(unq_color) == 2) & (len(unq_number) == 2):
-				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scsn')))
+				if not self.quiet:
+					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scsn')))
 				return score_index['scsn']
 			elif ((len(unq_number) == 2) & (len(unq_color) == 3)) | ((len(unq_number) == 3) & (len(unq_color) == 2)):
-				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scen')))
+				if not self.quiet:
+					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scen')))
 				return score_index['scen']
 			else:
-				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ecen')))
+				if not self.quiet:
+					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ecen')))
 				return score_index['ecen']
 		# 3 or more jokers always results in the same color/same number combo			
 		elif num_jokers >= 3:
-			print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scsn')))
+			if not self.quiet:
+				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scsn')))
 			return score_index['scsn']
 		# all other combos with one or no joker can be written fairly simply
 		else:
 			# same color same number
 			if ((len(unq_color) == 1) & (len(unq_number) == 1)) | ((len(unq_color) == 2) & (len(unq_number) == 2) & ('JO' in unq_dice)):
-				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scsn')))
+				if not self.quiet:
+					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scsn')))
 				return score_index['scsn']
 			# same color different number
 			elif ((len(unq_color) == 1) & (len(unq_number) == 4)) | ((len(unq_color) == 2) & (len(unq_number) == 4) & ('JO' in unq_dice)):
-				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scen')))
+				if not self.quiet:
+					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('scen')))
 				return score_index['scen']
 			# same number different color
 			elif ((len(unq_color) == 4) & (len(unq_number) == 1)) | ((len(unq_color) == 4) & (len(unq_number) == 2) & ('JO' in unq_dice)):
-				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ecsn')))
+				if not self.quiet:
+					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ecsn')))
 				return score_index['ecsn']
 			# different number different color
 			elif ((len(unq_color) == 4) & (len(unq_number) == 4)):
-				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ecen')))
+				if not self.quiet:
+					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ecen')))
 				return score_index['ecen']
 			# two pair
 			elif ((len(unq_dice) == 2) & (two_pair(combo))) | ((len(unq_dice) == 3) & ('JO' in unq_dice)):
-				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('tp')))
+				if not self.quiet:
+					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('tp')))
 				return score_index['tp']
 			# same color only
 			elif (len(unq_color) == 1) | ((len(unq_color) == 2) & ('JO' in unq_dice)):
-				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('sc')))
+				if not self.quiet:
+					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('sc')))
 				return score_index['sc']
 			# same number only
 			elif (len(unq_number) == 1) | ((len(unq_number) == 2) & ('JO' in unq_dice)):
-				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('sn')))
+				if not self.quiet:
+					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('sn')))
 				return score_index['sn']
 			# pair color pair number
 			elif ((len(unq_color) == 2) & (len(unq_number) == 2) & (len(unq_dice) == 4)) | ((len(unq_color) == 3) & (len(unq_number) == 3) & (len(unq_dice) == 4) & ('JO' in unq_dice)):
-				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pcpn')))
+				if not self.quiet:
+					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pcpn')))
 				return score_index['pcpn']
 			# each color only
 			elif (len(unq_color) == 4):
-				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ec')))
+				if not self.quiet:
+					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('ec')))
 				return score_index['ec']
 			# each number only
 			elif (len(unq_number) == 4):
-				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('en')))
+				if not self.quiet:
+					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('en')))
 				return score_index['en']
 			# pair color
 			elif (len(unq_color) == 2) & (one_pair(combo,0)):
-				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pc')))
+				if not self.quiet:
+					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pc')))
 				return score_index['pc']
 			# pair number
 			elif (len(unq_number) == 2) & (one_pair(combo,1)):
-				print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pn')))
+				if not self.quiet:
+					print('{combo} combo netted you {points} points'.format(combo=combo,points=points('pn')))
 				return score_index['pn']
 			# everything else
 			else:
@@ -325,7 +342,8 @@ class Game:
 				spaces_cleared -= 4
 				bonus_points += spaces_cleared*50
 			if bonus_points > 0:
-				print(f'bonus points scored: {bonus_points}')
+				if not self.quiet:
+					print(f'bonus points scored: {bonus_points}')
 				self.points += bonus_points
 
 		def get_new_dice():
@@ -342,10 +360,12 @@ class Game:
 		check_for_jokers()
 		score_board()
 		get_new_dice()
+		self.last_move_lock_roll = True
 
 	def game_over(self):
 		""" exits the game
 		"""
-		print(f'game over! your final score is: {self.points}')
-		print(f'your total moves were: {self.moves}')
+		if not self.quiet:
+			print(f'game over! your final score is: {self.points}')
+			print(f'your total moves were: {self.moves}')
 		self.gameover = True
