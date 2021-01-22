@@ -8,4 +8,4 @@ EXPLORATION_MAX = 1.0
 EXPLORATION_MIN = 0.0001
 EXPLORATION_DECAY = 0.99998
 
-previous_model = False
+previous_model = True

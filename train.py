@@ -12,7 +12,7 @@ def train():
     action_space = ActionHash().__len__()
     observation_space = len(AVActions(g).state)
     memory = pickle.load(open('model/memory.pckl','rb')) if previous_model else None
-    model = load_model(open('model/model.h5')) if previous_model else None
+    model = load_model('model/model.h5') if previous_model else None
     total_moves, run, exploration_rate = pickle.load(open('model/misc.pckl','rb')) if previous_model else (0,0,EXPLORATION_MAX)
     dqn_solver = DQNSolver(action_space, observation_space, memory, model, exploration_rate)
     while True:
