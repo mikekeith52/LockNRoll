@@ -71,6 +71,7 @@ class Game:
 		self.joker_on_board = [] # to fix issue where jokers in an un-cleared combo get scored over and over
 		self.points = 0 # your total score
 		self.gameover = False
+		self.moves = 0
 
 	def _score_combo(self,combo):
 		""" combo is a list of dice to be scored (ex: ["R1","B2","G3","Y4"])
@@ -226,6 +227,7 @@ class Game:
 				raise GameError.BoardPosNotEmpty(f'Space {where} is not available')
 		else:
 			raise GameError.DieDoesNotExist(f'That die ({which}) not available')
+		self.moves += 1
 
 	def place_joker(self,where):
 		""" where is a space on the 1-indexed board (see init_board global) and must be int-like (ex: 1, 1.0, '1', '01', True)
@@ -238,6 +240,7 @@ class Game:
 				raise GameError.JokeronJoker('cannot place a joker on another joker!')
 		else:
 			raise GameError.JokerNotAvailable(f'joker not avaialable, earn {self.next_joker} more non-bonus points for next one')
+		self.moves += 1
 
 	def lock_n_roll(self):
 		""" LOCK N' ROLL BRAH!!
@@ -344,5 +347,5 @@ class Game:
 		""" exits the game
 		"""
 		print(f'game over! your final score is: {self.points}')
+		print(f'your total moves were: {self.moves}')
 		self.gameover = True
-		exit()
