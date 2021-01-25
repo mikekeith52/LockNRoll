@@ -38,6 +38,9 @@ class main:
 					AIPlay(g)
 				elif move == '6':
 					g.game_over()
+				elif move == 'mk17':
+					from test import get_state
+					get_state(g)
 				else:
 					print('invalid entry, make sure your casing is correct')
 			except (game.GameError,IndexError) as e:
