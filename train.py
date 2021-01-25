@@ -19,7 +19,6 @@ def train():
         run += 1
         total_reward = 0
         g = game.Game(quiet=True)
-        #g.jokers = np.random.choice([0,0,1,2],size=1)[0]
         state = AVActions(g).state
         state = np.reshape(state, [1, observation_space])
         while not g.gameover:

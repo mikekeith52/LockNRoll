@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import argparse
 
-order = 2
-column = 'Reward'
+order = 1
+column = 'Score'
 
 def main():
 	df = pd.read_csv('log.csv',names=['Game','ExplrRt','Score','Reward','Moves'])
