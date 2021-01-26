@@ -42,7 +42,7 @@ class main:
 					from test import get_state
 					get_state(g)
 				else:
-					print('invalid entry, make sure your casing is correct')
+					print('invalid entry')
 			except (game.GameError,IndexError) as e:
 				print(e)
 

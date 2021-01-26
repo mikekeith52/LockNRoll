@@ -17,72 +17,75 @@ def evaluate_reward(game_state,action):
     init_open_spaces = sum([1 for i in game_state.board if i.isnumeric()])
     choice = ActionHash().get(action)
 
-    try:
-        if choice[0] == 'JO':
-            game_state.place_joker(choice[1] + 1)
-            return score_last_move(game_state,choice) # to teach it that it's better to play a die rather than lock n roll when there will be no points gained
-        elif choice != ('LO','RO'):
-            game_state.place_die(choice[0],choice[1] + 1)
-            return score_last_move(game_state,choice) # to teach it that it's better to play a die rather than lock n roll when there will be no points gained
-    except (game.GameError.BoardPosNotEmpty,game.GameError.DieDoesNotExist,game.GameError.JokerNotAvailable,game.GameError.JokeronJoker): # in case you try a move you can't do -- this should be knowable with the state and the AI needs to learn it
-        return -1000 # so it can learn which moves are invalid - invalid moves must be worse than accepting a game over
-
-    if choice == ('LO','RO'):
-        if game_state.last_move_lock_n_roll:
+    if (len(game_state.dice) > 0) & (len([i for i in game_state.board if i.isnumeric]) > 0):
+        pos = int(choice.split('_')[1])
+        next_die = game_state.dice[0]
+        if game_state.board[pos].isnumeric():
+            game_state.place_die(next_die,pos+1)
             game_state.lock_n_roll()
-            return -1000 # to stop it from locknroll over and over instead of game over
-        game_state.lock_n_roll()
-    if game_state.gameover:
-        return - 100
-    else:
-        open_spaces = sum([1 for i in game_state.board if i.isnumeric()])
-        spaces_cleared = open_spaces - init_open_spaces
-        if (spaces_cleared == 0) & (len(game_state.dice) > 0):
-            return -1000
+        elif (game_state.jokers > 0) & (pos not in game_state.joker_on_board):
+            game_state.place_joker(pos+1)
+            game_state.lock_n_roll()
         else:
-            return spaces_cleared*100 # since we already awarded it for getting good combos
+            return -100 # can't move there
 
-class AVActions:
+    if game_state.gameover:
+        return game_state.points - init_points - 100
+    else:
+        return game_state.points - init_points
+
+class Actions:
     def __init__(self,game_state):
-        self.game_state = game_state
-        expand_grid = lambda d: pd.DataFrame([row for row in product(*d.values())],columns=d.keys())
-        actions = expand_grid({'DIE':game_state.dice,'AVSPACE':[i for i,v in enumerate(game_state.board) if v.isnumeric()]})
-        if game_state.jokers > 0:
-            actions = actions.append(expand_grid({'DIE':['JO'],
-                'AVSPACE':[i for i,v in enumerate(game_state.board) if i not in game_state.joker_on_board]}),
-                ignore_index=True,sort=False)
+        self.state_dict = {
+            #'SpacesOpen':sum([1 for i in game_state.board if i.isnumeric()]),
+            #'DiceAv':len(game_state.dice),
+            #'RedsAv':sum([1 for i in game_state.dice if i[0] == 'R']),
+            #'YellowsAv':sum([1 for i in game_state.dice if i[0] == 'Y']),
+            #'BluesAv':sum([1 for i in game_state.dice if i[0] == 'B']),
+            #'GreensAv':sum([1 for i in game_state.dice if i[0] == 'G']),
+            #'OnesAv':sum([1 for i in game_state.dice if i[1] == '1']),
+            #'TwosAv':sum([1 for i in game_state.dice if i[1] == '2']),
+            #'ThreesAv':sum([1 for i in game_state.dice if i[1] == '3']),
+            #'FoursAv':sum([1 for i in game_state.dice if i[1] == '4']),
+            'JokerAv':game_state.jokers#,
+            #'CombosOpen':len(game_state.index_not_scored),
+            #'RedsOnBoard':sum([1 for i in game_state.board if i[0] == 'R']),
+            #'YellowsOnBoard':sum([1 for i in game_state.board if i[0] == 'Y']),
+            #'BluesOnBoard':sum([1 for i in game_state.board if i[0] == 'B']),
+            #'RedsOnBoard':sum([1 for i in game_state.board if i[0] == 'G']),
+            #'OnesOnBoard':sum([1 for i in game_state.board if (not i.isnumeric()) & (i[1] == '1')]),
+            #'TwosOnBoard':sum([1 for i in game_state.board if (not i.isnumeric()) & (i[1] == '2')]),
+            #'ThreesOnBoard':sum([1 for i in game_state.board if (not i.isnumeric()) & (i[1] == '3')]),
+            #'FoursOnBoard':sum([1 for i in game_state.board if (not i.isnumeric()) & (i[1] == '4')]),
+            #'JokersOnBoard':len(game_state.joker_on_board)
+            #'LastMoveLR': int(game_state.last_move_lock_n_roll) # just because we have to have a way to punish it if it doesn't want to play
+        }
+        for t in range(4):
+            for c in 'RBGY':
+                self.state_dict[f'Die{t}_{c}'] = 0
+            for n in '1234':
+                self.state_dict[f'Die{t}_{n}'] = 0
 
-        actions = actions.set_index(['DIE','AVSPACE']).sort_index()
-        self.available = list(actions.index.unique())
-        self.available.append(('LO','RO'))
-        state = {}
+        for t,dice in enumerate(game_state.dice):
+            self.state_dict[f'Die{t}_{dice[0]}'] = 1
+            self.state_dict[f'Die{t}_{dice[1]}'] = 1
+
+        for i in range(16):
+            for c in 'RBGY':
+                self.state_dict[f'Space{i}_CoveredByC_{c}'] = 0
+            for n in '1234':
+                self.state_dict[f'Space{i}_CoveredByN_{n}'] = 0
+            self.state_dict[f'Space{i}_CoveredByJO'] = 0
+
         for i,v in enumerate(game_state.board):
-            state[f'BOARD_IDX_{i}_JO'] = 0
-            for c in 'YGBR':
-                state[f'BOARD_IDX_{i}_C{c}'] = 0
-            if (not v.isnumeric()) & (not v == 'JO'):
-                state[f'BOARD_IDX_{i}_C{v[0]}'] = 1
-            for n in '1234':
-                state[f'BOARD_IDX_{i}_N{n}'] = 0
-            if (not v.isnumeric()) & (not v == 'JO'):
-                state[f'BOARD_IDX_{i}_N{v[1]}'] = 1
-            if v == 'JO':
-                state[f'BOARD_IDX_{i}_JO'] = 1
+            if (not v.isnumeric()) & (v != 'JO'):
+                self.state_dict[f'Space{i}_CoveredByC_{v[0]}'] = 1
+                self.state_dict[f'Space{i}_CoveredByN_{v[1]}'] = 1
+            elif v == 'JO':
+                self.state_dict[f'Space{i}_CoveredByJO'] = 1
         
-        # which dice are available to play
-        for c in 'YGBR':
-            for n in '1234':
-                state[f'DICE_AV_{c+n}'] = 0
-        for d in game_state.dice:
-            state[f'DICE_AV_{d}'] = 1
-
-        state['LASTMOVELOCKROLL'] = int(game_state.last_move_lock_n_roll)
-        state['JOKERS'] = game_state.jokers
-        state['POINTSTONEXTJOKER'] = game_state.next_joker
-        state['NEXTJOKERBONUS'] = game_state.next_joker_bonus
-        
-        self.state = tuple(state.values())
-        self.labels = tuple(state.keys())
+        self.state = tuple(self.state_dict.values())
+        self.labels = tuple(self.state_dict.keys())
 
 class DQNSolver:
     def __init__(self, action_space, observation_space, memory = None, model = None, exploration_rate = None):
@@ -92,8 +95,8 @@ class DQNSolver:
         self.memory = deque(maxlen=MEMORY_SIZE) if memory is None else memory
         if model is None:
             self.model = Sequential()
-            self.model.add(Dense(492, input_shape=(observation_space,), activation="relu"))
-            self.model.add(Dense(492, activation="relu"))
+            self.model.add(Dense(observation_space*3, input_shape=(observation_space,), activation="relu"))
+            self.model.add(Dense(observation_space*3, activation="relu"))
             self.model.add(Dense(self.action_space, activation="linear"))
             self.model.compile(loss="mse", optimizer=OPTIMIZER(lr=LEARNING_RATE))
         else:
@@ -104,9 +107,8 @@ class DQNSolver:
         self.memory.append((state, action, reward, next_state, done))
 
     def act(self, game, state):
-        available_actions = AVActions(game).available
         if np.random.rand() < self.exploration_rate:
-            choice = np.random.choice(self.action_space,size=1)[0]
+            return random.randrange(self.action_space)
         q_values = self.model.predict(state)
         return np.argmax(q_values[0])
 
