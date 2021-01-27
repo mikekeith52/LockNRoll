@@ -20,7 +20,10 @@ class State:
             for n in '1234':
                 self.state_dict[f'Space{i}_CoveredByN_{n}'] = 0
             self.state_dict[f'Space{i}_CoveredByJO'] = 0
-            self.state_dict[f'Move_{i}_Dist'] = min([int(v) for v in game_state.board if v.isnumeric()], key = lambda x:abs(x-i)) - i
+            if len([v for v in game_state.board if v.isnumeric()]) > 0:
+                self.state_dict[f'Move_{i}_Dist'] = min([int(v) for v in game_state.board if v.isnumeric()], key = lambda x:abs(x-i)) - i
+            else: 
+                self.state_dict[f'Move_{i}_Dist'] = 0
 
         for i,v in enumerate(game_state.board):
             if (not v.isnumeric()) & (v != 'JO'):

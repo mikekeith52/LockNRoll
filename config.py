@@ -10,4 +10,4 @@ EXPLORATION_DECAY = 0.9999
 
 MAX_ITERS = 1000000
 
-continue_last_model = False
+continue_last_model = True

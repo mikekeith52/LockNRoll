@@ -38,17 +38,21 @@ class DQNSolver:
     def evaluate_reward(self,game,action):
         init_points = game.points
         if ((len(game.dice) > 0) & (len([i for i in game.board if i.isnumeric()]) > 0)) | (game.jokers > 0):
-            next_die = game.dice[0]
             if game.board[action].isnumeric():
+                next_die = game.dice[0]
                 game.place_die(next_die,action+1)
                 game.lock_n_roll()
             elif (game.jokers > 0) & (action not in game.joker_on_board):
                 game.place_joker(action+1)
                 game.lock_n_roll()
-            else:
-                adjusted_pos = min([i for i in game.board if i.isnumeric()],lambda x: abs(x-action))
-                game.place_die(next_die,adjusted_pos+1)
+            elif len([i for i in game.board if i.isnumeric()]) > 0:
+                next_die = game.dice[0]
+                adjusted_pos = min([int(i) for i in game.board if i.isnumeric()],key = lambda x: abs(x-action))
+                game.place_die(next_die,adjusted_pos)
                 game.lock_n_roll()
+            else:
+                adjusted_pos = min([int(i) for i,v in game.board if i not in game.joker_on_board],key = lambda x: abs(x-action))
+                game.place_joker(adjusted_pos+1)
 
         if game.gameover:
             return game.points - init_points - 100
