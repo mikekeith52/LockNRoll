@@ -2,9 +2,10 @@ import numpy as np
 from State import State, StateReducedLDA, ReducedObsSpaceLDA
 from keras.models import load_model
 
+model = load_model('model/model.h5')
+
 def AIPlay(game):
     observation_space = ReducedObsSpaceLDA
-    model = load_model('model/model.h5')
     state = StateReducedLDA(State(game)).state
     state = np.reshape(state, [1, observation_space])
     q_values = model.predict(state)

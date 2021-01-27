@@ -28,7 +28,7 @@ class State:
                 self.state_dict[f'Space{i}_CoveredByN_{n}'] = 0
             self.state_dict[f'Space{i}_CoveredByJO'] = 0
             if len([v for v in game_state.board if v.isnumeric()]) > 0:
-                self.state_dict[f'Move_{i}_Dist'] = min([int(v) for v in game_state.board if v.isnumeric()], key = lambda x:abs(x-i)) - i
+                self.state_dict[f'Move_{i}_Dist'] = min([i for i,v in enumerate(game_state.board) if v.isnumeric()], key = lambda x:abs(x-i)) - i
             else: 
                 self.state_dict[f'Move_{i}_Dist'] = 0
 
@@ -55,6 +55,7 @@ class StateReducedLDA:
 if __name__ == '__main__':
     g = game.Game()
     state = State(g)
+    print(len(state.state))
     for k, v in state.state_dict.items():
         print(k,v)
 

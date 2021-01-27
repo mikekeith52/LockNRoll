@@ -1,5 +1,5 @@
 import numpy as np
-from State import State
+from State import State, StateReducedLDA, ReducedObsSpaceLDA
 from keras.models import load_model
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -13,9 +13,9 @@ def get_state(g):
 
 def see_pred(g):
 	action_space = 16
-	observation_space = len(State(g).state)
+	observation_space = ReducedObsSpaceLDA
 	model = load_model('model/model.h5')
-	state = State(g).state
+	state = StateReducedLDA(State(g)).state
 	state = np.reshape(state, [1, observation_space])
 	q_values = model.predict(state)
 
