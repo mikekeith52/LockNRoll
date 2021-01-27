@@ -2,7 +2,7 @@ import game
 import pickle
 import numpy as np
 import os
-from State import State
+from State import State, StateReducedLDA, ReducedObsSpaceLDA
 from model import DQNSolver
 from keras.models import load_model
 from config import EXPLORATION_MAX, MAX_ITERS, continue_last_model
@@ -10,7 +10,7 @@ from config import EXPLORATION_MAX, MAX_ITERS, continue_last_model
 def train():
     g = game.Game(quiet=True)
     action_space = 16
-    observation_space = len(State(g).state)
+    observation_space = ReducedObsSpaceLDA
     memory = pickle.load(open('model/memory.pckl','rb')) if continue_last_model else None
     model = load_model('model/model.h5') if continue_last_model else None
     total_moves, run, exploration_rate = pickle.load(open('model/misc.pckl','rb')) if continue_last_model else (0,0,EXPLORATION_MAX)
@@ -19,7 +19,7 @@ def train():
         run += 1
         total_reward = 0
         g = game.Game(quiet=True)
-        state = State(g).state
+        state = StateReducedLDA(State(g)).state
         state = np.reshape(state, [1, observation_space])
         while not g.gameover:
             total_moves += 1
@@ -27,7 +27,7 @@ def train():
             reward = dqn_solver.evaluate_reward(g,action)
             total_reward += reward
             print('move:',action,'reward:',reward)
-            state_next = State(g).state
+            state_next = StateReducedLDA(State(g)).state
             state_next = np.reshape(state_next, [1, observation_space])
             dqn_solver.remember(state, action, reward, state_next, g.gameover)
             state = state_next

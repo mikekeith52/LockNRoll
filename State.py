@@ -1,4 +1,11 @@
 import game
+import pickle
+import numpy as np
+
+PCA_MODEL = pickle.load(open('model/pca.pckl','rb'))
+LDA_MODEL = pickle.load(open('model/lda.pckl','rb'))
+ReducedObsSpacePCA = PCA_MODEL.n_components_
+ReducedObsSpaceLDA = len(LDA_MODEL.explained_variance_ratio_)
 
 class State:
     def __init__(self,game_state):
@@ -35,7 +42,24 @@ class State:
         self.state = tuple(self.state_dict.values())
         self.labels = tuple(self.state_dict.keys())
 
+class StateReducedPCA:
+    def __init__(self,state):
+        state_reshaped = np.reshape(state.state, [1, len(state.state)])
+        self.state = PCA_MODEL.transform(state_reshaped)
+
+class StateReducedLDA:
+    def __init__(self,state):
+        state_reshaped = np.reshape(state.state, [1, len(state.state)])
+        self.state = LDA_MODEL.transform(state_reshaped)
+
 if __name__ == '__main__':
     g = game.Game()
-    for k, v in State(g).state_dict.items():
+    state = State(g)
+    for k, v in state.state_dict.items():
         print(k,v)
+
+    state_r = StateReducedPCA(state)
+    print('Reduced State PCA:',state_r.state)
+
+    state_r = StateReducedLDA(state)
+    print('Reduced State LDA:',state_r.state)

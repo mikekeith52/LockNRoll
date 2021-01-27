@@ -8,7 +8,6 @@ from keras.optimizers import Adam as OPTIMIZER
 from itertools import product
 
 import game
-from State import State
 from config import GAMMA, LEARNING_RATE, MEMORY_SIZE, BATCH_SIZE, EXPLORATION_MAX, EXPLORATION_MIN, EXPLORATION_DECAY
 
 class DQNSolver:
@@ -53,6 +52,7 @@ class DQNSolver:
             else:
                 adjusted_pos = min([int(i) for i,v in game.board if i not in game.joker_on_board],key = lambda x: abs(x-action))
                 game.place_joker(adjusted_pos+1)
+                game.lock_n_roll()
 
         if game.gameover:
             return game.points - init_points - 100
@@ -63,7 +63,6 @@ class DQNSolver:
         if len(self.memory) < BATCH_SIZE:
             return
         batch = random.sample(self.memory, BATCH_SIZE)
-        #batch[-1] = self.memory[-1] # to keep the game moving
         for state, action, reward, state_next, gameover in batch:
             q_update = reward
             if not gameover:

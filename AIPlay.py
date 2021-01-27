@@ -1,35 +1,37 @@
 import numpy as np
-from State import State
+from State import State, StateReducedLDA, ReducedObsSpaceLDA
 from keras.models import load_model
 
 def AIPlay(game):
-    observation_space = len(State(game).state)
+    observation_space = ReducedObsSpaceLDA
     model = load_model('model/model.h5')
-    state = State(game).state
+    state = StateReducedLDA(State(game)).state
     state = np.reshape(state, [1, observation_space])
     q_values = model.predict(state)
-    q_hashed = {i:q for i,q in enumerate(q_values[0])}
-    while True:
-        choice = [i for i,v in q_hashed.items() if v == np.max(list(q_hashed.values()))][0]
+    action = np.argmax(q_values[0])
 
-        if (len(game.dice) > 0) & (len([i for i in game.board if i.isnumeric()]) > 0):
+    if ((len(game.dice) > 0) & (len([i for i in game.board if i.isnumeric()]) > 0)) | (game.jokers > 0):
+        if game.board[action].isnumeric():
             next_die = game.dice[0]
-            if game.board[choice].isnumeric():
-                game.place_die(next_die,choice+1)
-                print(f'the AI has chosen to play die {next_die} to space {choice+1}')
-                return
-            elif (game.jokers > 0) & (choice not in game.joker_on_board):
-                game.place_joker(choice+1)
-                print(f'the AI has chosen to place a joker on space {choice+1}')
-                return
-            else:
-                q_hashed.pop(choice) # go to next-best move
+            game.place_die(next_die,action+1)
+            print(f'the AI has placed {next_die} on space {action+1}')
+        elif (game.jokers > 0) & (action not in game.joker_on_board):
+            game.place_joker(action+1)
+            print(f'the AI has placed a joker on space {action+1}')
+        elif len([i for i in game.board if i.isnumeric()]) > 0:
+            next_die = game.dice[0]
+            adjusted_pos = min([int(i) for i in game.board if i.isnumeric()],key = lambda x: abs(x-action))
+            game.place_die(next_die,adjusted_pos)
+            print(f'the AI has placed {next_die} on space {adjusted_pos}')
         else:
-            game.lock_n_roll()
-            if game.gameover:
-                print('the AI apologizes for losing')
-            else:
-                print("the AI has chosen to Lock N' Roll my dude/dudette!")
-            return
+            adjusted_pos = min([int(i) for i,v in game.board if i not in game.joker_on_board],key = lambda x: abs(x-action))
+            game.place_joker(adjusted_pos+1)
+            print(f'the AI has placed a joker on space {adjusted_pos+1}')
+    else:
+        game.lock_n_roll()
+        if game.gameover:
+            print('the AI apologizes for losing')
+        else:
+            print("the AI has chosen to Lock N' Roll my dude/dudette!")
 
 
