@@ -45,13 +45,10 @@ class DQNSolver:
             elif (game.jokers > 0) & (action not in game.joker_on_board):
                 game.place_joker(action+1)
                 game.lock_n_roll()
-            elif self.exploration_rate >= .5:
-                return -100 # can't move there
             else:
-                game.gameover() # after learning sufficiently, begin giving game overs
-        else:
-            print('something went wrong')
-            exit()
+                adjusted_pos = min([i for i in game.board if i.isnumeric()],lambda x: abs(x-action))
+                game.place_die(next_die,adjusted_pos+1)
+                game.lock_n_roll()
 
         if game.gameover:
             return game.points - init_points - 100

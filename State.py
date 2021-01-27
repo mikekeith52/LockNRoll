@@ -5,7 +5,7 @@ class State:
         game_state.dice = sorted(game_state.dice) # to reduce the total number of possible states
         self.state_dict = {'JokerAv':game_state.jokers}
         for t in range(4):
-            for c in 'RBGY':
+            for c in 'BGRY':
                 self.state_dict[f'Die{t}_{c}'] = 0
             for n in '1234':
                 self.state_dict[f'Die{t}_{n}'] = 0
@@ -20,6 +20,7 @@ class State:
             for n in '1234':
                 self.state_dict[f'Space{i}_CoveredByN_{n}'] = 0
             self.state_dict[f'Space{i}_CoveredByJO'] = 0
+            self.state_dict[f'Move_{i}_Dist'] = min([int(v) for v in game_state.board if v.isnumeric()], key = lambda x:abs(x-i)) - i
 
         for i,v in enumerate(game_state.board):
             if (not v.isnumeric()) & (v != 'JO'):
@@ -30,3 +31,8 @@ class State:
         
         self.state = tuple(self.state_dict.values())
         self.labels = tuple(self.state_dict.keys())
+
+if __name__ == '__main__':
+    g = game.Game()
+    for k, v in State(g).state_dict.items():
+        print(k,v)

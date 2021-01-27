@@ -38,14 +38,9 @@ def train():
             if g.gameover:
                 # ADD LOGGING
                 print("Game:",str(run),"exploration:",str(dqn_solver.exploration_rate),"score:",str(g.points),"total reward:",str(total_reward),"moves:",str(g.moves),"total attempted moves:",str(total_moves))
-                if dqn_solver.exploration_rate >= .5:
-                    mode = 'a' if (os.path.exists('log.csv')) & (run > 1) else 'w'
-                    with open('log.csv',mode) as log:
-                        log.write(f'{run},{dqn_solver.exploration_rate},{g.points},{total_reward},{g.moves},{total_moves}\n')
-                else:
-                    mode = 'a' if (os.path.exists('log_1.csv')) & (run > 1) else 'w'
-                    with open('log_1.csv',mode) as log:
-                        log.write(f'{run},{dqn_solver.exploration_rate},{g.points},{total_reward},{g.moves},{total_moves}\n')
+                mode = 'a' if (os.path.exists('log.csv')) & (run > 1) else 'w'
+                with open('log.csv',mode) as log:
+                    log.write(f'{run},{dqn_solver.exploration_rate},{g.points},{total_reward},{g.moves},{total_moves}\n')
                 # overwrite most current model iteration
                 with open('model/memory.pckl','wb') as pckl:
                     pickle.dump(dqn_solver.memory,pckl)
