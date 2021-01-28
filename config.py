@@ -13,4 +13,4 @@ MAX_ITERS = 1000000
 Reduce = True
 Reduction = 'LDA'
 
-continue_last_model = False
+continue_last_model = True

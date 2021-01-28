@@ -40,14 +40,14 @@ class DQNSolver:
             if game.board[action].isnumeric():
                 next_die = game.dice[0]
                 game.place_die(next_die,action+1)
-            elif (game.jokers > 0) & (action not in game.joker_on_board):
-                game.place_joker(action+1)
             elif len([i for i in game.board if i.isnumeric()]) > 0:
                 next_die = game.dice[0]
-                adjusted_pos = min([int(i) for i in game.board if i.isnumeric()],key = lambda x: abs(x-action))
+                adjusted_pos = min([int(i) for i in game.board if i.isnumeric()],key = lambda x: abs(x-(action+1)))
                 game.place_die(next_die,adjusted_pos)
+            elif (game.jokers > 0) & (action not in game.joker_on_board):
+                game.place_joker(action+1)
             else:
-                adjusted_pos = min([int(i) for i,v in game.board if i not in game.joker_on_board],key = lambda x: abs(x-action))
+                adjusted_pos = min([int(i) for i,v in enumerate(game.board) if i not in game.joker_on_board],key = lambda x: abs(x-action))
                 game.place_joker(adjusted_pos+1)
                 
         game.lock_n_roll()

@@ -50,12 +50,22 @@ class main:
 					AIPlay(g)
 				elif move == '6':
 					g.game_over()
-				elif move == 'mk17':
+				elif move == 'seestate':
 					from monitor import get_state
 					get_state(g)
+				elif move == 'seepred':
+					from monitor import see_pred
+					see_pred(g)
+				elif move == 'mikekeithisthedon':
+					g.jokers = 2
+					print('you dirty dog')
+				elif move == 'rosebud':
+					g.points += 1000
+					print('listen fat')
 				else:
 					print('invalid entry')
-			except (game.GameError,IndexError) as e:
+			except (game.GameError.BoardPosNotEmpty,game.GameError.DieDoesNotExist,
+				game.GameError.JokerNotAvailable,game.GameError.JokeronJoker,IndexError) as e:
 				print(e)
 
 if __name__ == '__main__':

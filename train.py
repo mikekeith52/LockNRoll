@@ -29,12 +29,12 @@ def train():
             state_next = np.reshape(state_next, [1, observation_space])
             dqn_solver.remember(state, action, reward, state_next, g.gameover)
             state = state_next
-            # JUST FOR LOGGING FOR NOW
+            # state log - for monitoring
             with open('state.log','w') as log:
                 for k,v in State(g).state_dict.items():
                     log.write(f'{k} {v}\n')
             if g.gameover:
-                # ADD LOGGING
+                # game log
                 print("Game:",str(run),"exploration:",str(dqn_solver.exploration_rate),"score:",str(g.points),"moves:",str(g.moves),"total moves:",str(total_moves))
                 mode = 'a' if (os.path.exists('log.csv')) & (run > 1) else 'w'
                 with open('log.csv',mode) as log:

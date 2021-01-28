@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-order = 2
+order = 1
 column = 'Score'
 
 def main():
