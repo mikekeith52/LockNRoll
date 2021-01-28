@@ -14,21 +14,22 @@ def train():
     memory = pickle.load(open('model/memory.pckl','rb')) if continue_last_model else None
     model = load_model('model/model.h5') if continue_last_model else None
     total_moves, run, exploration_rate = pickle.load(open('model/misc.pckl','rb')) if continue_last_model else (0,0,EXPLORATION_MAX)
-    dqn_solver = DQNSolver(action_space, observation_space, memory, model, exploration_rate)
+    ddqn_solver = DQNSolver(action_space, observation_space, memory, model, exploration_rate)
     while total_moves < MAX_ITERS:
         run += 1
         g = game.Game(quiet=True)
         state = StateReducedLDA(State(g)).state
         state = np.reshape(state, [1, observation_space])
         while not g.gameover:
-            action = dqn_solver.act(g, state)
+            action = ddqn_solver.act(g, state)
             total_moves+=1
-            reward = dqn_solver.evaluate_reward(g,action)
+            reward = ddqn_solver.evaluate_reward(g,action)
             print(f'move: {action}, reward: {reward}')
             state_next = StateReducedLDA(State(g)).state
             state_next = np.reshape(state_next, [1, observation_space])
-            dqn_solver.remember(state, action, reward, state_next, g.gameover)
+            ddqn_solver.remember(state, action, reward, state_next, g.gameover)
             state = state_next
+            ddqn_solver.step_update(total_moves)
             # state log - for monitoring
             with open('state.log','w') as log:
                 for k,v in State(g).state_dict.items():
@@ -45,9 +46,7 @@ def train():
                 with open('model/misc.pckl','wb') as pckl:
                     misc = (total_moves, run, dqn_solver.exploration_rate)
                     pickle.dump(misc,pckl)
-                dqn_solver.model.save('model/model.h5')
-            else:
-                dqn_solver.experience_replay()
-
+                ddqn_solver.model.save('model/model.h5')
+                
 if __name__ == "__main__":
     train()

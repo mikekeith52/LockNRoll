@@ -7,10 +7,11 @@ BATCH_SIZE = 28
 EXPLORATION_MAX = 1.0
 EXPLORATION_MIN = 0.0001
 EXPLORATION_DECAY = 0.9999
+REPLAY_START_SIZE = 50000
 
 MAX_ITERS = 1000000
 
 Reduce = True
 Reduction = 'LDA'
 
-continue_last_model = True
+continue_last_model = False
