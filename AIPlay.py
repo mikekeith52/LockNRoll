@@ -6,8 +6,7 @@ model = load_model('model/model.h5')
 
 def AIPlay(game):
     observation_space = ReducedObsSpaceLDA
-    state = StateReducedLDA(State(game)).state
-    state = np.reshape(state, [1, observation_space])
+    state = State(g).reduced_state_lda
     q_values = model.predict(state)
     action = np.argmax(q_values[0])
 

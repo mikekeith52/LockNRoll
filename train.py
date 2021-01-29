@@ -2,10 +2,10 @@ import game
 import pickle
 import numpy as np
 import os
-from State import State, StateReducedLDA, ReducedObsSpaceLDA
-from model import DQNSolver
+from State import State, ReducedObsSpaceLDA
+from DDQN import DDQNTrainer
 from keras.models import load_model
-from config import EXPLORATION_MAX, MAX_ITERS, continue_last_model
+from config import EXPLORATION_MAX, MAX_ITERS, REPLAY_START_SIZE, continue_last_model 
 
 def train():
     g = game.Game(quiet=True)
@@ -14,39 +14,39 @@ def train():
     memory = pickle.load(open('model/memory.pckl','rb')) if continue_last_model else None
     model = load_model('model/model.h5') if continue_last_model else None
     total_moves, run, exploration_rate = pickle.load(open('model/misc.pckl','rb')) if continue_last_model else (0,0,EXPLORATION_MAX)
-    ddqn_solver = DQNSolver(action_space, observation_space, memory, model, exploration_rate)
+    ddqn_trainer = DDQNTrainer(action_space, observation_space, memory, model, exploration_rate)
     while total_moves < MAX_ITERS:
         run += 1
         g = game.Game(quiet=True)
-        state = StateReducedLDA(State(g)).state
-        state = np.reshape(state, [1, observation_space])
+        current_state = State(g).reduced_state_lda
         while not g.gameover:
-            action = ddqn_solver.act(g, state)
+            action = ddqn_trainer.act(current_state)
             total_moves+=1
-            reward = ddqn_solver.evaluate_reward(g,action)
+            reward = ddqn_trainer.evaluate_reward(g,action)
             print(f'move: {action}, reward: {reward}')
-            state_next = StateReducedLDA(State(g)).state
-            state_next = np.reshape(state_next, [1, observation_space])
-            ddqn_solver.remember(state, action, reward, state_next, g.gameover)
-            state = state_next
-            ddqn_solver.step_update(total_moves)
+            next_state = State(g).reduced_state_lda
+            ddqn_trainer.remember(current_state, action, reward, next_state, g.gameover)
+            current_state = next_state
+            ddqn_trainer.step_update(total_moves)
             # state log - for monitoring
-            with open('state.log','w') as log:
-                for k,v in State(g).state_dict.items():
-                    log.write(f'{k} {v}\n')
+            if total_moves > REPLAY_START_SIZE:
+                with open('state.log','w') as log:
+                    for k,v in State(g).state_dict.items():
+                        log.write(f'{k} {v}\n')
             if g.gameover:
                 # game log
-                print("Game:",str(run),"exploration:",str(dqn_solver.exploration_rate),"score:",str(g.points),"moves:",str(g.moves),"total moves:",str(total_moves))
+                print("Game:",str(run),"exploration:",str(ddqn_trainer.epsilon),"score:",str(g.points),"moves:",str(g.moves),"total moves:",str(total_moves))
                 mode = 'a' if (os.path.exists('log.csv')) & (run > 1) else 'w'
                 with open('log.csv',mode) as log:
-                    log.write(f'{run},{dqn_solver.exploration_rate},{g.points},{g.moves}\n')
+                    log.write(f'{run},{ddqn_trainer.epsilon},{g.points},{g.moves}\n')
                 # overwrite most current model iteration
-                with open('model/memory.pckl','wb') as pckl:
-                    pickle.dump(dqn_solver.memory,pckl)
-                with open('model/misc.pckl','wb') as pckl:
-                    misc = (total_moves, run, dqn_solver.exploration_rate)
-                    pickle.dump(misc,pckl)
-                ddqn_solver.model.save('model/model.h5')
+                if total_moves > REPLAY_START_SIZE:
+                    with open('model/memory.pckl','wb') as pckl:
+                        pickle.dump(ddqn_trainer.memory,pckl)
+                    with open('model/misc.pckl','wb') as pckl:
+                        misc = (total_moves, run, ddqn_trainer.epsilon)
+                        pickle.dump(misc,pckl)
+                    ddqn_trainer.model.save('model/model.h5')
                 
 if __name__ == "__main__":
     train()

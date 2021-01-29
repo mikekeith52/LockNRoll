@@ -41,16 +41,9 @@ class State:
         
         self.state = tuple(self.state_dict.values())
         self.labels = tuple(self.state_dict.keys())
-
-class StateReducedPCA:
-    def __init__(self,state):
-        state_reshaped = np.reshape(state.state, [1, len(state.state)])
-        self.state = PCA_MODEL.transform(state_reshaped)
-
-class StateReducedLDA:
-    def __init__(self,state):
-        state_reshaped = np.reshape(state.state, [1, len(state.state)])
-        self.state = LDA_MODEL.transform(state_reshaped)
+        self.reshaped_state = np.reshape(self.state, [1, len(self.state)])
+        self.reduced_state_pca = PCA_MODEL.transform(self.reshaped_state)
+        self.reduced_state_lda = LDA_MODEL.transform(self.reshaped_state)
 
 if __name__ == '__main__':
     g = game.Game()
@@ -59,8 +52,8 @@ if __name__ == '__main__':
     for k, v in state.state_dict.items():
         print(k,v)
 
-    state_r = StateReducedPCA(state)
-    print('Reduced State PCA:',state_r.state)
+    state_r = state.reduced_state_pca
+    print('Reduced State PCA:',state_r)
 
-    state_r = StateReducedLDA(state)
-    print('Reduced State LDA:',state_r.state)
+    state_r = state.reduced_state_lda
+    print('Reduced State LDA:',state_r)

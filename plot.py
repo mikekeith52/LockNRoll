@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-order = 1
+order = 2
 column = 'Score'
 
 def main():
@@ -12,7 +12,8 @@ def main():
 		print('Need more observations before plotting')
 		return
 
-	sns.lineplot(x='Game',y=column,data=df)
+	ax = sns.lineplot(x='Game',y=column,data=df)
+	ax.axvline(df.loc[df['ExplrRt'] < 1,'Game'].min(), color="red", linestyle="--")
 	sns.regplot(x='Game',y=column,data=df,order=order)
 	plt.show()
 
