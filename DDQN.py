@@ -42,7 +42,7 @@ class DDQNTrainer:
 
         if total_step % TRAINING_FREQUENCY == 0:
             loss, accuracy, average_max_q = self._train()
-            mode = 'a' if os.path.exists('log.log') & (total_step >= TRAINING_FREQUENCY) else 'w'
+            mode = 'a' if os.path.exists('log.log') & (total_step > TRAINING_FREQUENCY) else 'w'
             with open('log.log',mode) as f:
                 f.write(f'moves: {total_step}, loss: {loss}, accuracy: {accuracy}, average_max_q: {average_max_q}\n')
 
