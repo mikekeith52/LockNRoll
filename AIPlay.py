@@ -1,12 +1,12 @@
 import numpy as np
-from State import State, ReducedObsSpaceLDA
+from State import State, ReducedObsSpacePCA
 from keras.models import load_model
 
 model = load_model('model/model.h5')
 
 def AIPlay(game):
-    observation_space = ReducedObsSpaceLDA
-    state = State(game).reduced_state_lda
+    observation_space = ReducedObsSpacePCA
+    state = State(game).reduced_state_pca
     q_values = model.predict(state)
     action = np.argmax(q_values[0])
 

@@ -15,8 +15,8 @@ class DDQNTrainer:
         self.memory = [] if memory is None else memory
         if model is None:
             self.model = Sequential()
-            self.model.add(Dense(observation_space*4, input_shape=(observation_space,), activation="relu"))
-            self.model.add(Dense(observation_space*4, activation="relu"))
+            self.model.add(Dense(500, input_shape=(observation_space,), activation="relu"))
+            self.model.add(Dense(500, activation="relu"))
             self.model.add(Dense(self.action_space, activation="linear"))
             self.model.compile(loss="mean_squared_error",
                                 optimizer=OPTIMIZER(lr=LEARNING_RATE,
