@@ -62,6 +62,17 @@ class main:
 				elif move == 'rosebud':
 					g.points += 1000
 					print('listen fat')
+				elif move == 'upupdowndownleftrightleftrightba':
+					import numpy as np
+					for _ in range(100000):
+						print(np.random.choice(list(welcome),size=1))
+					print('you win the game!!')
+				elif move == 'it hurts, ness':
+					import numpy as np
+					dice_copy = g.dice[:]
+					for d in dice_copy:
+						g.place_die(d,np.random.choice([i for i in g.board if i.isnumeric()],size=1)[0])
+					print('you were unable to comprehend the form of this move')
 				else:
 					print('invalid entry')
 			except (game.GameError.BoardPosNotEmpty,game.GameError.DieDoesNotExist,

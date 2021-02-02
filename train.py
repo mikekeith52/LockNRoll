@@ -5,7 +5,7 @@ import os
 from State import State, ReducedObsSpacePCA
 from DDQN import DDQNTrainer
 from keras.models import load_model
-from config import EXPLORATION_MAX, MAX_ITERS, REPLAY_START_SIZE, MODEL_WRITE_FREQ, continue_last_model 
+from config import EXPLORATION_MAX, MAX_ITERS, REPLAY_START_SIZE, MODEL_PERSISTENCE_UPDATE_FREQUENCY, continue_last_model 
 
 def train():
     g = game.Game(quiet=True)
@@ -37,7 +37,7 @@ def train():
                 with open('log.csv',mode) as log:
                     log.write(f'{run},{ddqn_trainer.epsilon},{g.points},{g.moves}\n')
             # overwrite most current model iteration
-            if (total_moves > REPLAY_START_SIZE) & (total_moves % MODEL_WRITE_FREQ == 0):
+            if (total_moves > REPLAY_START_SIZE) & (total_moves % MODEL_PERSISTENCE_UPDATE_FREQUENCY == 0):
                 with open('model/memory.pckl','wb') as pckl:
                     pickle.dump(ddqn_trainer.memory,pckl)
                 with open('model/misc.pckl','wb') as pckl:

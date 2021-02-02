@@ -6,7 +6,7 @@ from keras.layers import Dense
 from keras.optimizers import RMSprop as OPTIMIZER
 
 import game
-from config import GAMMA, LEARNING_RATE, MEMORY_SIZE, BATCH_SIZE, EXPLORATION_MAX, EXPLORATION_MIN, EXPLORATION_DECAY, REPLAY_START_SIZE, TRAINING_FREQUENCY
+from config import GAMMA, LEARNING_RATE, MEMORY_SIZE, BATCH_SIZE, EXPLORATION_MAX, EXPLORATION_MIN, EXPLORATION_DECAY, REPLAY_START_SIZE, TRAINING_FREQUENCY, TARGET_NETWORK_UPDATE_FREQUENCY
 
 class DDQNTrainer:
     def __init__(self, action_space, observation_space, memory = None, model = None, exploration_rate = None):
@@ -19,12 +19,24 @@ class DDQNTrainer:
             self.model.add(Dense(500, activation="relu"))
             self.model.add(Dense(self.action_space, activation="linear"))
             self.model.compile(loss="mean_squared_error",
-                                optimizer=OPTIMIZER(lr=LEARNING_RATE,
-                                                     rho=GAMMA,
-                                                     epsilon=EXPLORATION_MIN),
-                                metrics=["accuracy"])
+                               optimizer=OPTIMIZER(lr=LEARNING_RATE,
+                                                    rho=GAMMA,
+                                                    epsilon=EXPLORATION_MIN),
+                               metrics=["accuracy"])
         else:
             self.model = model
+
+        self.model_target = self.model = Sequential()
+        self.model_target.add(Dense(500, input_shape=(observation_space,), activation="relu"))
+        self.model_target.add(Dense(500, activation="relu"))
+        self.model_target.add(Dense(self.action_space, activation="linear"))
+        self.model_target.compile(loss="mean_squared_error",
+                                  optimizer=OPTIMIZER(lr=LEARNING_RATE,
+                                                      rho=GAMMA,
+                                                      epsilon=EXPLORATION_MIN),
+                                  metrics=["accuracy"])
+
+        self._reset_target_network()
 
     # state will be a tuple of 1/0s, action is the chosen action's index, reward is the total points gained from the action, next_state is another tuple of 0/1, done is whether there is a game over
     def remember(self, current_state, action, reward, next_state, terminal):
@@ -47,6 +59,9 @@ class DDQNTrainer:
                 f.write(f'moves: {total_step}, loss: {loss}, accuracy: {accuracy}, average_max_q: {average_max_q}\n')
 
         self._update_epsilon()
+
+        if total_step % TARGET_NETWORK_UPDATE_FREQUENCY == 0:
+            self._reset_target_network()
 
     def act(self, current_state):
         if (np.random.rand() < self.epsilon) | (len(self.memory) < REPLAY_START_SIZE):
@@ -89,7 +104,7 @@ class DDQNTrainer:
             current_state = entry["current_state"]
             current_states.append(current_state)
             next_state = entry["next_state"]
-            next_state_prediction = self.model.predict(next_state)[0]
+            next_state_prediction = self.model_target.predict(next_state)[0]
             next_q_value = np.max(next_state_prediction)
             q = list(self.model.predict(current_state)[0])
             if entry["terminal"]:
@@ -100,9 +115,9 @@ class DDQNTrainer:
             max_q_values.append(np.max(q))
 
         fit = self.model.fit(np.asarray(current_states).squeeze(),
-                            np.asarray(q_values).squeeze(),
-                            batch_size=BATCH_SIZE,
-                            verbose=0)
+                             np.asarray(q_values).squeeze(),
+                             batch_size=BATCH_SIZE,
+                             verbose=0)
         loss = fit.history["loss"][0]
         accuracy = fit.history["accuracy"][0]
         return loss, accuracy, np.mean(max_q_values)
@@ -110,3 +125,6 @@ class DDQNTrainer:
     def _update_epsilon(self):
         self.epsilon -= EXPLORATION_DECAY
         self.epsilon = max(EXPLORATION_MIN, self.epsilon)
+
+    def _reset_target_network(self):
+        self.model_target.set_weights(self.model.get_weights())
