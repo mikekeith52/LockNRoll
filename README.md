@@ -3,7 +3,7 @@
 *Lock n' roll brah*
 
 ## AI
-- An AI is being trained to master this game, see AI.MD for an overview of that process
+- An AI is being trained to master this game, see [AI.MD](https://github.com/mikekeith52/LockNRoll/blob/main/AI.MD) for an overview of that process
 - This readme is an overview of lock n' roll the game and how to play it using the Python application
 
 ## Rules

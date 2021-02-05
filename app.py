@@ -1,6 +1,15 @@
 import game
-
-interface = """what move do you want to play:
+welcome = r"""
+=========================================================================================================
+=========================================================================================================
+||\\||\\||  ||     //====\\ //==== || //   ||\\   ||//   //==\\ //====\\ ||     ||      || ||  ||//||//||
+||\\||\\||  ||     ||    || ||     ||//    || \\  ||     ||  // ||    || ||     ||      || ||  ||//||//||
+||\\||\\||  ||     ||    || ||     ||\\    ||  \\ ||     ||==   ||    || ||     ||      || ||  ||//||//||
+||\\||\\||  ||==== \\====// \\==== || \\   ||   \\||     ||  \\ \\====// ||==== ||====  <> <>  ||//||//||
+=========================================================================================================
+=========================================================================================================
+"""
+interface = """what move do you want to play?
   0: readme
   1: place die (which,where)
   2: place joker (where)
@@ -11,6 +20,9 @@ interface = """what move do you want to play:
 selection: """
 
 class main:
+	def __init__(self):
+		print(welcome)
+
 	def run(self):
 		g = game.Game()
 		while not g.gameover:
@@ -38,12 +50,33 @@ class main:
 					AIPlay(g)
 				elif move == '6':
 					g.game_over()
-				elif move == 'mk17':
-					from test import get_state
+				elif move == 'seestate':
+					from monitor import get_state
 					get_state(g)
+				elif move == 'seepred':
+					from monitor import see_pred
+					see_pred(g)
+				elif move == 'mikekeithisthedon':
+					g.jokers = 2
+					print('you dirty dog')
+				elif move == 'rosebud':
+					g.points += 1000
+					print('listen fat')
+				elif move == 'upupdowndownleftrightleftrightba':
+					import numpy as np
+					for _ in range(100000):
+						print(np.random.choice(list(welcome),size=1))
+					print('you win the game!!')
+				elif move == 'it hurts, ness':
+					import numpy as np
+					dice_copy = g.dice[:]
+					for d in dice_copy:
+						g.place_die(d,np.random.choice([i for i in g.board if i.isnumeric()],size=1)[0])
+					print('you were unable to comprehend the form of this move')
 				else:
-					print('invalid entry, make sure your casing is correct')
-			except (game.GameError,IndexError) as e:
+					print('invalid entry')
+			except (game.GameError.BoardPosNotEmpty,game.GameError.DieDoesNotExist,
+				game.GameError.JokerNotAvailable,game.GameError.JokeronJoker,IndexError) as e:
 				print(e)
 
 if __name__ == '__main__':
