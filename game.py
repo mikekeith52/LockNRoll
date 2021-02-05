@@ -62,13 +62,11 @@ class Game:
 		self.quiet = quiet
 		self.board = init_board[:]
 		self.dice = [c+n for c,n in zip(random.choice(colors_pool,size=4),random.choice(numbers_pool,size=4))][:]
-		#self.dice = ['R1','R2','R3','R4']
 		self.jokers = 0
 		self.next_joker = 250 # points until the next joker (this will change as you gain points)
 		self.next_joker_points = 250 # total points until the next joker (this won't change until self.joker goes under 0, then it will increase or stay the same)
 		self.next_joker_bonus = 1000 # if you have two jokers and earn another, this is how many points will be awarded to you
 		self.index_not_scored = combination_idx[:] # a list of indices representing board combos that can be evaluated on your next lock n' roll
-		                                           # elements of this list are deleted and re-added depending on parts of the board that have already been scored/opened back up after a clear
 		self.joker_on_board = [] # to fix issue where jokers in an un-cleared combo get scored over and over
 		self.points = 0 # your total score
 		self.gameover = False

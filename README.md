@@ -1,6 +1,6 @@
 
 # WELCOME TO LOCK N' ROLL PYTHON!
-*Lock n' roll brah*
+*Disclaimer: as far as I am aware, Armor Games owns the Lock N' Roll intellectual property. I am not affiliated with this orgnization in any way. None of the code I developed is from the actual game's source code. The real game ([here](https://armorgames.com/play/4283/lock-n-roll#:~:text=Lock%20'n'%20Roll%20is%20an,according%20to%20number%20and%20color)) is much more fun and I'd encourage you to play it instead of this.*
 
 ## AI
 - An AI is being trained to master this game, see [AI.MD](https://github.com/mikekeith52/LockNRoll/blob/main/AI.MD) for an overview of that process
