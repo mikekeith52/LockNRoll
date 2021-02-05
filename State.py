@@ -1,6 +1,7 @@
 import game
 import pickle
 import numpy as np
+from sklearn.preprocessing import OneHotEncoder
 
 PCA_MODEL = pickle.load(open('model/pca.pckl','rb'))
 LDA_MODEL = pickle.load(open('model/lda.pckl','rb'))

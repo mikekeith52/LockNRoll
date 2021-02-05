@@ -37,7 +37,7 @@ def train():
                 with open('log.csv',mode) as log:
                     log.write(f'{run},{ddqn_trainer.epsilon},{g.points},{g.moves}\n')
             # overwrite most current model iteration
-            if (total_moves > REPLAY_START_SIZE) & (total_moves % MODEL_PERSISTENCE_UPDATE_FREQUENCY == 0):
+            if ((total_moves > REPLAY_START_SIZE) & (total_moves % MODEL_PERSISTENCE_UPDATE_FREQUENCY == 0)) | (total_moves == MAX_ITERS):
                 with open('model/memory.pckl','wb') as pckl:
                     pickle.dump(ddqn_trainer.memory,pckl)
                 with open('model/misc.pckl','wb') as pckl:
