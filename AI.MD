@@ -1,6 +1,8 @@
 
 # Double Deep Q Learning
 
+## Overview
+
 Using a framework obsensibly developed by [Greg Surma](https://gsurma.medium.com/atari-reinforcement-learning-in-depth-part-1-ddqn-ceaa762a546f), I trained an AI to learn Lock N' Roll. There were several barriers to overcome, including how to restrict the action space, since not all moves are available at all times in a real game; how to feed a reasonably sized observation space; and how to have it respond to the random nature of the game. My solutions are by no means perfect, and I am still in the process of developing the learning agent through much trial and tribululation, but after hundreds of thousands of training iterations, there is evidence that it did learn something (big win). It is nowhere near a good human's level, who can consistently score over 10,000 (even under the restricted rules implemented for the AI), but it is good for about 200 points per game on average and regularly scores over 2,000. A random agent scores about 165 and rarely scores over 1,000.  
 
 From what I understand about Deep Q Learning, it uses a process of chaining moves together and scoring any given move not only by the reward it immediately collects, but also by a discounted predicted future state that the current move will create. In effect, each prediction is based on a markov chain under a Bayesian framework. I decided to reward each move the actual points collected from that move where game overs are worth -500.
@@ -14,3 +16,10 @@ Unfortunately, after 500k+ training iterations, the AI never reached the thresho
 I also built the observation space based on all information a real player would have. This ended up being 193 one-hot encoded variables, with a large degree of redudancy in them (because if a blue is on board space 1, a red, green, or yellow is not, but you still need all four variables represented--there is no way to force an ordinal relationship between colors or even numbers in this game's universe). On top of that, there are many different patterns and placements the computer needs to consider in order to maximize its reward without an obvious relationship between them. The lock n' roll problem ends up being extremely multi-dimensional that we process in our minds trivially, but which is quite difficult to program into a computer. I reduced those 193 variables to 154 with PCA (keeping 99.9%+ of the dataset's variance), but I think I need to learn more about LSTM auto-encoders to obtain better results. I'm also thinking about using a genetic process to find the best possible neural network estimator. So much to consider!  
 
 This is something I will keep developing. For now, it is available to help you play in app.py with selection 5. You can also analyze some of its meta stats by running the analyze.ipynb notebook.  
+
+## Files:
+- **config.py**: sets the model's hyperparameters as well as whether to continue the most recent training process or start a new one
+- **DDQN.py**: creates the DDQNTrainer class with two neural networks to unbias the q estimations
+- **State.py**: evaluates the game object to create a full state vector and two reduced state vectors (with PCA and LDA respectively)
+- **train.py**: trains the agent
+- **AIPlay.py**: deploys the agent for use within app.py
