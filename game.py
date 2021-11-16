@@ -362,6 +362,8 @@ class Game:
 				else:
 					self.dice = [c+n for c,n in zip(random.choice(colors_pool,size=number_new_dice),random.choice(numbers_pool,size=number_new_dice))][:]
 					#self.dice = ['R1','R2','R3','R4']
+			elif (len([v for v in self.board if v.isnumeric()]) == 0) & (self.jokers == 0):
+				self.game_over()
 
 		check_for_jokers()
 		score_board()
