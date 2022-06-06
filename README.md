@@ -11,6 +11,8 @@ Check out the corresponding Towards Data Science article: [Reinforcement Learnin
 ## Rules
 ![](https://i2.wp.com/cannedbanana.files.wordpress.com/2009/01/lnr-rules.jpg)
 
+In addition to the rules explained in this figure, a common rule for Lock N' Roll applications is to treat any board clear as an automatic earned joker, which means a joker bonus if two jokers have already been obtained. This additional rule is incorporated in this application.
+
 ## Python Rendering
 - The colors yellow, red, blue, and green are rendered as Y, R, B, G respectively
 - The numbers are 1, 2, 3, 4
